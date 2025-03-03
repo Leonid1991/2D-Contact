@@ -10,8 +10,6 @@ syms Lx Ly Lz real;
 syms E nu real;
 % Elements
 syms xi eta real;
-% constants
-a = sym('a', [1 4]).';
 % nodal displacement coordinates
 u = sym('u', [1 4], 'real').';
 v = sym('v', [1 4], 'real').';
@@ -42,6 +40,9 @@ for ii=1:DIM
         Nm(ii,jj2)=Nvec(jj);
     end
 end
+Nm_xi = diff(Nm, xi);
+Nm_eta = diff(Nm, eta);
+
 % Nvec_2412=matlabFunction(Nvec)
 % Interpolation for assumed displacement field u 
 uuh=Nm*uu;
@@ -82,4 +83,6 @@ end
 % matlabFunction(dFeV,'file','dFe_2412V','vars',{E,nu,Lz,uu,X,xi,eta});
 % matlabFunction(dFeS,'file','dFe_2412S','vars',{E,nu,Lz,uu,X,xi,eta});
 % matlabFunction(Nm,'file','Nm_2412','vars',{xi,eta});
-matlabFunction(nablau,'file','nabla_u_2412','vars',{uu,X,xi,eta});
+% matlabFunction(Nm_xi,'file','Nm_2412_xi','vars',{xi,eta});
+% matlabFunction(Nm_eta,'file','Nm_2412_eta','vars',{xi,eta});
+% matlabFunction(nablau,'file','nabla_u_2412','vars',{uu,X,xi,eta});

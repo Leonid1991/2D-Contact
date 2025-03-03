@@ -15,11 +15,11 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-Body1.nElems.x = 8;
+Body1.nElems.x = 9;
 Body1.nElems.y = 2;
 
-Body2.nElems.x = 8;
-Body2.nElems.y = 2;
+Body2.nElems.x = 4;
+Body2.nElems.y = 1;
 
 Body1 = CreateFEMesh(DofsAtNode,Body1);
 Body2 = CreateFEMesh(DofsAtNode,Body2);
@@ -48,13 +48,15 @@ Body2.Fext.loc.x = Body2.Lx;
 Body2.Fext.loc.y = 'all';
 
 %##################### Contact ############################
-approach = 2; % 0 - none; 1- penalty, 2- Nitsche
+approach = 1; % 0 - none; 1- penalty, 2- Nitsche
 if approach == 1
-    penalty = 1e11;
+    penalty = 1e15;
 elseif approach == 2
     C = 100; % stabilization constant
     gamma = C*Body1.E/Body1.nElems.x; 
-    penalty = gamma; 
+    penalty = gamma;     
+else
+    penalty = 0;
 end    
 h = 10^(-8);
 
@@ -68,7 +70,7 @@ Body2.contact.loc.x = 'all';
 Body2.contact.loc.y = Body2.Ly;  
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 %##################### Newton iter. parameters ######################
-imax=10;
+imax=15;
 tol=0.001;         
 steps=10;
 

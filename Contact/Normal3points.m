@@ -2,8 +2,8 @@ function normal = Normal3points(central,left,right)
 dir = left  - right;
 
 % candidates (all possible normal vectors)
-n_vec1 = [-dir(2),  dir(1)];  
-n_vec2 = [ dir(2), -dir(1)]; 
+n_vec1 = [-dir(2);  dir(1)];  
+n_vec2 = [ dir(2); -dir(1)]; 
 
 
 to_center = central-right;
