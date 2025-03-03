@@ -19,8 +19,8 @@ info=[]; % array, where we will store info of the contact point projection
 
         [xy, distance, t_a]   = distance2curve([position_a'; position_b'],ContactPoint,'linear');
         
- 
-        if  ( (distance ~= 0) || (distance ~= 1) ) && (t_a > 0) % sanity check that the point isn't outside  
+        tol = 1e-6; % Tolerance for error margin    
+        if ~( (t_a < tol || abs(t_a - 1) < tol) && distance > tol )  % sanity check that the point isn't outside  
             
             % To what element these nodes belong
             % idea that on the edge, two nodes are uniquely belong to one element only 

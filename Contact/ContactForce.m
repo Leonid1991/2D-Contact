@@ -4,12 +4,16 @@ Fcont = zeros(ContactBody.nx,1);
 Ftarg = zeros(TargetBody.nx,1);
 
 % current position of the "possible contact" nodes of the Contact Body
-ContactPoints = [ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1)) + ...
-                 ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1))   ... % coords on X axis
-                 ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2)) + ... % coords on Y axis
-                 ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2))];
+ContactPoints_X = ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1)) + ...
+                  ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1));   ... % coords on X axis;
 
-for ii = 1:length(ContactBody.contact.nodalid) % loop over all contact nodes
+ContactPoints_Y =  ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2)) + ... % coords on Y axis
+                   ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2));
+
+ContactPoints = [ContactPoints_X ContactPoints_Y];
+
+
+for ii = 1:length(ContactBody.contact.nodalid) % loop over all contact points
   
     ContactPoint = ContactPoints(ii,:);
 
@@ -41,7 +45,7 @@ for ii = 1:length(ContactBody.contact.nodalid) % loop over all contact nodes
             
        % calculation of the forces applied to the nodes of contact elemnet 
        Fcont(DOFpositions) = Fcont(DOFpositions) - Contact_c*Outcome.Normal;   % storing contact forces
-                                                                       % we put minus here due to gap negativity  
+                                                                               % we put minus here due to gap negativity  
                                                                        
        % calculation  & redistribution over the nodes of target element
        Ftarg_loc = Contact_c*Nm_2412(xi,eta)'*Outcome.Normal;

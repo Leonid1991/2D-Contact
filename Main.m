@@ -15,8 +15,8 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-Body1.nElems.x = 9;
-Body1.nElems.y = 2;
+Body1.nElems.x = 4;
+Body1.nElems.y = 1;
 
 Body2.nElems.x = 4;
 Body2.nElems.y = 1;
@@ -58,7 +58,7 @@ elseif approach == 2
 else
     penalty = 0;
 end    
-h = 10^(-8);
+h = 10^(-9);
 
 % Identification of possble contact surfaces
 % local positions (assuming all bodies in (0,0) )
@@ -69,6 +69,7 @@ Body1.contact.nodalid = FindGlobNodalID(Body1.P0,Body1.contact.loc,Body1.shift);
 Body2.contact.loc.x = 'all';
 Body2.contact.loc.y = Body2.Ly;  
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
+
 %##################### Newton iter. parameters ######################
 imax=15;
 tol=0.001;         
