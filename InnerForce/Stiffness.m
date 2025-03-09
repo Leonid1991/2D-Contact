@@ -12,7 +12,6 @@ for ii1=1:n_points
     end
 end
 
-
 Kloc = zeros(8,8);    % Initialize the local 
 I_vec=zeros(8,1);
 

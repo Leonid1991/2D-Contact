@@ -1,4 +1,4 @@
-function Result = FindTargetPoint(TargetBody,ContactPoint)
+ function Result = FindTargetPoint(TargetBody,ContactPoint)
 
 Result.Gap = 0; % we always have something to work with
 nloc = TargetBody.nloc;
@@ -21,7 +21,7 @@ info=[]; % array, where we will store info of the contact point projection
         
         tol = 1e-6; % Tolerance for error margin    
         if ~( (t_a < tol || abs(t_a - 1) < tol) && distance > tol )  % sanity check that the point isn't outside  
-            
+                                                                     % point doesn't have t_a = 0, 1 and having distance > 0 at the same time                
             % To what element these nodes belong
             % idea that on the edge, two nodes are uniquely belong to one element only 
             ElemenNumber = find(any(nloc == a, 2) & any(nloc == b, 2)); 
@@ -33,8 +33,7 @@ info=[]; % array, where we will store info of the contact point projection
             % Finding external normal to the element (central element helps identify the outward direction)
             normal = Normal3points(central,position_a,position_b); % algorithm doesn't depend on the order a and b  
             info = [info; xy distance normal ElemenNumber];                    
-       end
-               
+        end           
     end
 
     if isempty(info) == false % we actually have connection

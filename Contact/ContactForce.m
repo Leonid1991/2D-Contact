@@ -35,14 +35,31 @@ for ii = 1:length(ContactBody.contact.nodalid) % loop over all contact points
        if approach == 1
           Contact_c = penalty*Outcome.Gap;
 
+          
        % Nitsche approach   
-       % elseif approach == 2 
-       %    penalty_coef = penalty*Outcome.Gap;
-       %    Nitshe_coef = (nabla_u_2412(U,X,xi,eta)*normal)'*vec;
-       %    Contact_c = penalty_coef + Nitshe_coef;
+       elseif approach == 2
+
+
+        
+          % 
+          % penalty_coef = penalty*Outcome.Gap;
+          % Nitshe_coef = (nabla_u_2412(U,X,xi,eta)*normal)'*vec;
+          % Contact_c = penalty_coef + Nitshe_coef;
 
        end    
-            
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+      % dFe_2412(TargetBody.E,TargetBody.nu,TargetBody.Lz,U,X,xi,eta)
+        Sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta)*Outcome.Normal
+
+
+
+
+
+
+        %%%%%%%%%%%%%%%%%%
+
        % calculation of the forces applied to the nodes of contact elemnet 
        Fcont(DOFpositions) = Fcont(DOFpositions) - Contact_c*Outcome.Normal;   % storing contact forces
                                                                                % we put minus here due to gap negativity  

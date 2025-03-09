@@ -15,11 +15,11 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-Body1.nElems.x = 4;
-Body1.nElems.y = 1;
+Body1.nElems.x = 8;
+Body1.nElems.y = 2;
 
 Body2.nElems.x = 4;
-Body2.nElems.y = 1;
+Body2.nElems.y = 2;
 
 Body1 = CreateFEMesh(DofsAtNode,Body1);
 Body2 = CreateFEMesh(DofsAtNode,Body2);
