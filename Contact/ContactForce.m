@@ -48,22 +48,9 @@ for ii = 1:length(ContactBody.contact.nodalid) % loop over all contact points
 
        end    
        
-       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-      % dFe_2412(TargetBody.E,TargetBody.nu,TargetBody.Lz,U,X,xi,eta)
-        Sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta)*Outcome.Normal
-
-
-
-
-
-
-        %%%%%%%%%%%%%%%%%%
-
        % calculation of the forces applied to the nodes of contact elemnet 
        Fcont(DOFpositions) = Fcont(DOFpositions) - Contact_c*Outcome.Normal;   % storing contact forces
-                                                                               % we put minus here due to gap negativity  
-                                                                       
+                                                                               % we put minus here due to gap negativity                                                                         
        % calculation  & redistribution over the nodes of target element
        Ftarg_loc = Contact_c*Nm_2412(xi,eta)'*Outcome.Normal;
        Ftarg(TargetBody.xloc(Outcome.Index,:)) = Ftarg(TargetBody.xloc(Outcome.Index,:)) + Ftarg_loc; % storing contact forces to target        
