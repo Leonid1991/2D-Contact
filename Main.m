@@ -63,9 +63,9 @@ Body2.edge2.loc.y = Body2.Ly;
 %##################### Contact ############################
 approach = 2; % 0 - none; 1- penalty, 2- Nitsche
 if approach == 1
-    penalty = 1e10;
+    penalty = 1e16;
 elseif approach == 2
-    penalty = 1e11;
+    penalty = 1e16;
 else
     penalty = 0;
 end    
@@ -82,9 +82,9 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 
 %##################### Newton iter. parameters ######################
-imax=15;
-tol=0.001;         
-steps=50;
+imax=20;
+tol=0.0001;         
+steps=8;
 
 % %#################### Processing ######################
 for ii = 1:steps
