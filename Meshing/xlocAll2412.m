@@ -1,6 +1,6 @@
 function xlocAll= xlocAll2412(nloc)
 
-[nl,m] = size(nloc);
+[nl,~] = size(nloc);
 xlocAll = zeros(nl,2*4);
 for k = 1:nl
   n1 = [nloc(k,1)*2-1:1:nloc(k,1)*2];

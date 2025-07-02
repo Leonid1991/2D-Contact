@@ -30,7 +30,7 @@ info=[]; % array, where we will store info of the contact point projection
             % Position of the central point of the chosen element
             central = Nm_2412(0,0)*(X+U); 
     
-            % Finding external normal to the element (central element helps identify the outward direction)
+            % Finding external normal to the element (a central point helps identify the outward direction)
             normal = Normal3points(central,position_a,position_b); % algorithm doesn't depend on the order a and b  
             info = [info; xy distance normal ElemenNumber];                    
         end           
@@ -46,10 +46,10 @@ info=[]; % array, where we will store info of the contact point projection
         Normal = info(index,4:5)';
 
         % Saving
-        Result.Index = info(index,6);        
+        Result.Index = info(index,6); % element on which point projected       
         Result.Gap = (ContactPoint - TargPosition) * Normal;  % gap calculation
-        Result.Normal = Normal;
-        Result.Position = TargPosition';
+        Result.Normal = Normal; % normal on the surf.
+        Result.Position = TargPosition'; % point projection
 
    end
 

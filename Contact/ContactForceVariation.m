@@ -3,7 +3,7 @@ function [Fc,Kc] = ContactForceVariation(Body1,Body2,penalty,h,approach)
     nx = Body1.nx + Body2.nx;
 
     Kc = zeros(nx,nx);
-    Fc = ContactForce(Body1,Body2,penalty,approach); % Body1 forces from the projection of Body2
+    Fc = ContactForce2(Body1,Body2,penalty,approach); % Body1 forces from the projection of Body2
 
     % variation of the variables
     I_vec=zeros(nx,1);
@@ -14,7 +14,7 @@ function [Fc,Kc] = ContactForceVariation(Body1,Body2,penalty,h,approach)
         Body1.u = Body1.u - h*I_vec(1:Body1.nx); 
         Body2.u = Body2.u - h*I_vec(1+Body1.nx:Body1.nx + Body2.nx);
 
-        Fch = ContactForce(Body1,Body2,penalty,approach); % force due to variation
+        Fch = ContactForce2(Body1,Body2,penalty,approach); % force due to variation
         
         Kc(:,ii) = (Fc - Fch) / h; 
     

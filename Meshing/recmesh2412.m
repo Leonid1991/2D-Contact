@@ -11,8 +11,7 @@ yk=geospace(0+y,b+y,m+1,1)';
 % generate nodal coordinates in xy-plane
 P = [];
 for k=1:m+1
-    Pk = [xk yk(k).*ones(n+1,1)];  
-    P = [P; Pk]; 
+    P = [P; xk yk(k).*ones(n+1,1)];  
 end
 % generate elememnt connectivity
 nloc = [];
