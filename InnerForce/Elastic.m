@@ -1,7 +1,7 @@
-function Body = Elastic(Body,h)
+function Body = Elastic(Body)
 
 nl=Body.nElems.x * Body.nElems.y;    % computes number of elements
-
+h = 2*sqrt(eps);
 % Initialize the global stiffness
 K = zeros(Body.nx,Body.nx);
 Fint = zeros(Body.nx,1);

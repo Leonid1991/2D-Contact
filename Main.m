@@ -15,11 +15,8 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-approach = 2; % 0 - none; 1- penalty, 2- Nitsche
-
 dx = 8;
-
-dy = 2;
+dy = 1;
 
 Body1.nElems.x = dx;
 Body1.nElems.y = dy;
@@ -67,8 +64,8 @@ Body2.edge2.loc.x = Body2.Lx;
 Body2.edge2.loc.y = Body2.Ly;
 
 %##################### Contact ############################
-% approach = 2; % 0 - none; 1- penalty, 2- Nitsche
-pn = 1e14;
+approach = 2; % 0 - none; 1- penalty, 2- Nitsche
+pn = 1e15;
 
 if approach == 1
     penalty = pn;
@@ -77,7 +74,6 @@ elseif approach == 2
 else
     penalty = 0;
 end    
-h = 10^(-9);
 
 % Identification of possble contact surfaces
 % local positions (assuming all bodies in (0,0) )
@@ -92,8 +88,9 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 %##################### Newton iter. parameters ######################
 imax=20;
 tol=1e-4;         
-steps= 20;
+steps= 10;
 total_steps = 0;
+titertot=0;  
 % %#################### Processing ######################
 for ii = 1:steps
 
@@ -104,49 +101,69 @@ for ii = 1:steps
     
     % contact convergence
     for jj = 1:imax
+        tic;
+
         total_steps = total_steps + 1;
         % interacation of two bodies
-        [Fc,Kc] = Contact(Body1,Body2,penalty,h,approach);
-    
-        
-        
-        Body1 = Elastic(Body1,h);
-        Body2 = Elastic(Body2,h);
+        [Fc,Kc] = Contact(Body1,Body2,penalty,approach);
+       
+        Body1 = Elastic(Body1);
+        Body2 = Elastic(Body2);
          
         % Assemblance
         Ke = [            Body1.Fint.K zeros(Body1.nx,Body2.nx);
               zeros(Body2.nx,Body1.nx)            Body2.Fint.K];
-        K = Ke + Kc;
+        K = Ke - Kc;
     
         Fe = [Body1.Fint.vec; Body2.Fint.vec];
         Fext = [Body1.Fext.vec; Body2.Fext.vec];
-        ff =  Fe - Fext + Fc;
+        ff =  Fe - Fext - Fc;
         
         % Calculations
         K_bc = K(bc,bc); 
         ff_bc = ff(bc);
-        deltaf=ff_bc/norm(Fext(bc)); 
-        uu_bc=-K_bc\ff_bc;      
+        deltaf = ff_bc/norm(Fext(bc)); 
+        uu_bc = -K_bc\ff_bc;      
     
         % Separation
         Body1.u(Body1.bc) = Body1.u(Body1.bc) + uu_bc(1:Body1.ndof);
         Body2.u(Body2.bc) = Body2.u(Body2.bc) + uu_bc(Body1.ndof + 1:end);
          
-      
-        % norm(deltaf)
-        if all(abs(deltaf)<tol*sum(bc)) || all(abs(uu_bc)<tol*sum(bc))
-                disp(['Solution is found by ' num2str(jj) ' iterations.'])
-                break
-        elseif jj==imax 
-                disp('The solution is not found. ')
-        else     
-                disp('wait...')
-        end
-    
+        Body1 = Analys(Body1);
+        Body2 = Analys(Body2);
         
+%%%%%%%%%%%%%%%%%%% picture of the changes during the process
+        % fig_number = 1; 
+        % fig = figure(fig_number);
+        % clf(fig);
+        % pause(0.05)
+        % ShowNodeNumbers = false;
+        % disp('Static test')
+        % PostProcessing(Body1,fig_number,'b',ShowNodeNumbers)
+        % PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
+%%%%%%%%%%%%%%%%%%%
+
+        Gap = Gapfunc(Body1,Body2);
+        titer=toc;
+        titertot=titertot+titer;
+
+
+        % if all(abs(deltaf)<tol*sum(bc)) || all(abs(uu_bc)<tol*sum(bc))
+        %         disp(['Solution is found by ' num2str(jj) ' iterations.'])
+        %         break
+        % elseif jj==imax 
+        %         disp('The solution is not found. ')
+        % else     
+        %         disp('wait...')
+        % end
+        
+
+        if printStatus(deltaf, uu_bc, tol*sum(bc), ii, jj, imax, steps, titertot, Gap)
+            break;  
+        end 
+
     end
-    Body1 = Analys(Body1);
-    Body2 = Analys(Body2);
+    
 end
 % %##################### Post-Processing ######################
 fig_number = 1; 
@@ -158,7 +175,7 @@ PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
 fprintf('total steps is %d  \n', total_steps );
 
 
-Gap = Gapfunc(Body1,Body2);
+
 
 fprintf('total gap is %10.6f  \n', Gap )
 

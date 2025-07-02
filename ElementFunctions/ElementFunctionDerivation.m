@@ -93,10 +93,5 @@ Sigma = [sigma(1) sigma(3);
 
 nabla_sigma = jacobian(sigma,[xi,eta])*JeInv;
 
-% sigma_1 = jacobian(sigma(1),[xi,eta])*JeInv;
-% sigma_2 = jacobian(sigma(2),[xi,eta])*JeInv;
-% sigma_3 = jacobian(sigma(3),[xi,eta])*JeInv;
-% nabla_sigma - [sigma_1; sigma_2; sigma_3]
-
 matlabFunction(nabla_sigma,'file','nabla_sigma_2412','vars',{E,nu,uu,X,xi,eta});
 matlabFunction(Sigma,'file','Sigma_2412','vars',{E,nu,uu,X,xi,eta});
