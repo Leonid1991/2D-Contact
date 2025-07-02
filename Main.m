@@ -16,7 +16,7 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
 dx = 8;
-dy = 1;
+dy = 2;
 
 Body1.nElems.x = dx;
 Body1.nElems.y = dy;
@@ -65,7 +65,7 @@ Body2.edge2.loc.y = Body2.Ly;
 
 %##################### Contact ############################
 approach = 2; % 0 - none; 1- penalty, 2- Nitsche
-pn = 1e15;
+pn = 1e8;
 
 if approach == 1
     penalty = pn;
@@ -113,11 +113,11 @@ for ii = 1:steps
         % Assemblance
         Ke = [            Body1.Fint.K zeros(Body1.nx,Body2.nx);
               zeros(Body2.nx,Body1.nx)            Body2.Fint.K];
-        K = Ke - Kc;
+        K = Ke + -Kc;
     
         Fe = [Body1.Fint.vec; Body2.Fint.vec];
         Fext = [Body1.Fext.vec; Body2.Fext.vec];
-        ff =  Fe - Fext - Fc;
+        ff =  Fe - Fext + -Fc;
         
         % Calculations
         K_bc = K(bc,bc); 

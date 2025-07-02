@@ -82,7 +82,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            % Fcont_loc = penalty * Gap * Normal + lambda * Normal + Gap * d_lambda2;   % storing contact forces, we put minus here due to gap negativity 
 
            % vector Gap
-           vec = Gap^2 * Normal; % Gap^2 = abs(rb-ra), 
+           vec = (-Gap) * Normal; 
 
            % Traget
            Sigma = Sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta);
@@ -95,8 +95,8 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            d_lambda2 = NablaMultiplication(nabla_sigma2,Normal) * vec; 
 
            % assemblance
-           lambda = vec' * (Sigma - Sigma2) * Normal; 
-
+           %lambda = vec' * (Sigma - Sigma2) * Normal; 
+            lambda = vec'* (Sigma2*Normal) + vec'*(Sigma*Normal);
            % calculation  & redistribution over the nodes of target elemen
            Ftarg_loc = penalty * Gap * Nm_2412(xi,eta)'*Normal  + lambda*Nm_2412(xi,eta)'*Normal + Gap * Nm_2412(xi,eta)'*d_lambda;
            Fcont_loc = penalty * Gap * Normal + lambda * Normal + Gap * d_lambda2;   % storing contact forces, we put minus here due to gap negativity 
