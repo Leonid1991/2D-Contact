@@ -15,7 +15,7 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-dx = 8;
+dx = 4;
 dy = 1;
 
 Body1.nElems.x = dx;
@@ -41,11 +41,11 @@ bc = [Body1.bc Body2.bc];
 %##################### Loadings ######################
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
-Body1.Fext.y = -62.5*10^(6);
+Body1.Fext.y =-62.5*10^(6);
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
 
-Body2.Fext.y = 0; 
+Body2.Fext.y = 0*62.5*10^(6); 
 Body2.Fext.x = 0;
 Body2.Fext.loc.x = Body2.Lx;
 Body2.Fext.loc.y = 'all';
@@ -64,17 +64,10 @@ Body2.edge2.loc.x = Body2.Lx;
 Body2.edge2.loc.y = Body2.Ly;
 
 %##################### Contact ############################
-approach = 2; % 0 - none; 1- penalty, 2- Nitsche
-pn = 1e15;
-
-if approach == 1
-    penalty = pn;
-elseif approach == 2
-    penalty = pn;
-else
-    penalty = 0;
-end    
-
+approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+pn = 1e10;
+penalty = pn;
+ 
 % Identification of possble contact surfaces
 % local positions (assuming all bodies in (0,0) )
 Body1.contact.loc.x = 'all';
@@ -86,9 +79,9 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);% 
 
 %##################### Newton iter. parameters ######################
-imax=20;
+imax=15;
 tol=1e-4;         
-steps= 10;
+steps= 20;
 total_steps = 0;
 titertot=0;  
 % %#################### Processing ######################
@@ -110,14 +103,15 @@ for ii = 1:steps
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
          
-        % Assemblance
+        % Assemblance of stiffnesses
         Ke = [            Body1.Fint.K zeros(Body1.nx,Body2.nx);
               zeros(Body2.nx,Body1.nx)            Body2.Fint.K];
-        K = Ke - Kc;
+        K = Ke + Kc;
     
+        % Assemblance of forces
         Fe = [Body1.Fint.vec; Body2.Fint.vec];
         Fext = [Body1.Fext.vec; Body2.Fext.vec];
-        ff =  Fe - Fext - Fc;
+        ff =  Fe - Fext + Fc;
         
         % Calculations
         K_bc = K(bc,bc); 
@@ -141,24 +135,14 @@ for ii = 1:steps
         % disp('Static test')
         % PostProcessing(Body1,fig_number,'b',ShowNodeNumbers)
         % PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
+        % Fc
 %%%%%%%%%%%%%%%%%%%
 
         Gap = Gapfunc(Body1,Body2);
         titer=toc;
         titertot=titertot+titer;
 
-
-        % if all(abs(deltaf)<tol*sum(bc)) || all(abs(uu_bc)<tol*sum(bc))
-        %         disp(['Solution is found by ' num2str(jj) ' iterations.'])
-        %         break
-        % elseif jj==imax 
-        %         disp('The solution is not found. ')
-        % else     
-        %         disp('wait...')
-        % end
-        
-
-        if printStatus(deltaf, uu_bc, tol*sum(bc), ii, jj, imax, steps, titertot, Gap)
+        if printStatus(deltaf, uu_bc, tol*sum(bc), ii, jj, imax, steps, titertot,Gap)
             break;  
         end 
 
@@ -172,11 +156,9 @@ disp('Static test')
 PostProcessing(Body1,fig_number,'b',ShowNodeNumbers)
 PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
 
+
+Gap = Gapfunc(Body1,Body2);
 fprintf('total steps is %d  \n', total_steps );
-
-
-
-
 fprintf('total gap is %10.6f  \n', Gap )
 
 
