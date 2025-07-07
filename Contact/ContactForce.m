@@ -1,4 +1,4 @@
-function Fc =  ContactForce2(ContactBody,TargetBody,penalty,approach)
+function Fc =  ContactForce(ContactBody,TargetBody,penalty,approach)
 % Target Body is a body points are projected
 % Contact Body is a body points are taken for projection
 
@@ -55,6 +55,8 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
         elseif approach > 1
            
            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           % finding the isocoordinates and element numbers of the corrseponded
+           % contact element
            Node = ContactBody.contact.nodalid(ii);
            ElemenNumber = find(any(ContactBody.nloc == Node, 2), 1, 'first');
            [X2,U2] = GetCoorDisp(ElemenNumber,ContactBody.nloc,ContactBody.P0,ContactBody.u);
@@ -91,7 +93,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
               d_lambda_cont = d_lambda_cont + Gap * ( Normal_cont' * Nabla_n'* Sigma * Normal_cont + Normal_cont' * Sigma * Nabla_n * Normal_cont + Normal_cont' * Sigma * Normal_cont * Nabla_n) * Normal_cont;
            end
 
-           % calculation  & redistribution over the nodes of target elemen
+           % calculation  & redistribution over the nodes of target element
            Ftarg_loc = penalty * Gap * Normal_targ + lambda * Normal_targ + Gap * d_lambda_targ;
            Fcont_loc = penalty * Gap * Normal_cont + lambda * Normal_cont + Gap * d_lambda_cont;  
         end   
