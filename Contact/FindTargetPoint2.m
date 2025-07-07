@@ -33,18 +33,23 @@ function Result = FindTargetPoint2(TargetBody,ContactPoint)
         % To what element these nodes belong
         % idea that on the edge, two nodes are uniquely belong to one element only 
         ElemenNumber = find(any(nloc == a, 2) & any(nloc == b, 2)); 
-    
-        [X,U] = GetCoorDisp(ElemenNumber,nloc,TargetBody.P0,TargetBody.u); % position of nodes of the element 
-    
-        % Position of the central point of the chosen element
-        central = Nm_2412(0,0)*(X+U); 
-    
-        % Finding external normal to the element (a central point helps identify the outward direction)
-        Normal = Normal3points(central,position_a',position_b'); % outwards normal of element (algorithm doesn't depend on the order a and b)            
-        info = [info; xy distance Normal ElemenNumber];       
+        if ~isempty(ElemenNumber)
+            [X,U] = GetCoorDisp(ElemenNumber,nloc,TargetBody.P0,TargetBody.u); % position of nodes of the element     
+            % Position of the central point of the chosen element
+            central = Nm_2412(0,0)*(X+U); 
+        
+            % Finding external normal to the element (a central point helps identify the outward direction)
+            Normal = Normal3points(central,position_a',position_b'); % outwards normal of element (algorithm doesn't depend on the order a and b)            
+            info = [info; xy distance Normal ElemenNumber];
+
+        else
+            Result.Index = 0;
+        end             
     end 
 
     Result.Gap = 0; % we always have something to work with;
+    
+
     if isempty(info) == false % we actually have connection
 
         minDistance = min(info(:,3)); % minimal distance finding (the nearest point to the line)        

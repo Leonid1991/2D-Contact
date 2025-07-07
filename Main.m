@@ -15,7 +15,7 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-dx = 4;
+dx = 5;
 dy = 1;
 
 Body1.nElems.x = dx;
@@ -41,7 +41,9 @@ bc = [Body1.bc Body2.bc];
 %##################### Loadings ######################
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
+
 Body1.Fext.y =-62.5*10^(6);
+
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
 
@@ -65,7 +67,7 @@ Body2.edge2.loc.y = Body2.Ly;
 
 %##################### Contact ############################
 approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
-pn = 1e10;
+pn = 1e12;
 penalty = pn;
  
 % Identification of possble contact surfaces
@@ -99,7 +101,7 @@ for ii = 1:steps
         total_steps = total_steps + 1;
         % interacation of two bodies
         [Fc,Kc] = Contact(Body1,Body2,penalty,approach);
-       
+
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
          
@@ -126,18 +128,6 @@ for ii = 1:steps
         Body1 = Analys(Body1);
         Body2 = Analys(Body2);
         
-%%%%%%%%%%%%%%%%%%% picture of the changes during the process
-        % fig_number = 1; 
-        % fig = figure(fig_number);
-        % clf(fig);
-        % pause(0.05)
-        % ShowNodeNumbers = false;
-        % disp('Static test')
-        % PostProcessing(Body1,fig_number,'b',ShowNodeNumbers)
-        % PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
-        % Fc
-%%%%%%%%%%%%%%%%%%%
-
         Gap = Gapfunc(Body1,Body2);
         titer=toc;
         titertot=titertot+titer;

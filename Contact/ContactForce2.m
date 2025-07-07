@@ -53,7 +53,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
             
         % Nitsche approach   
         elseif approach > 1
-                
+           
            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
            Node = ContactBody.contact.nodalid(ii);
            ElemenNumber = find(any(ContactBody.nloc == Node, 2), 1, 'first');
@@ -86,7 +86,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
                   
            if approach >3 % adiing all terms
               Nabla_n = (eye(2) - Normal_cont * Normal_cont')./Gap;  
-              Sigma = Sigma_targ + Sigma_targ;
+              Sigma = Sigma_targ + Sigma_cont;
               d_lambda_targ = d_lambda_targ + Gap * ( Normal_targ' * Nabla_n'* Sigma * Normal_targ + Normal_targ' * Sigma * Nabla_n * Normal_targ + Normal_targ' * Sigma * Normal_targ * Nabla_n) * Normal_targ;
               d_lambda_cont = d_lambda_cont + Gap * ( Normal_cont' * Nabla_n'* Sigma * Normal_cont + Normal_cont' * Sigma * Nabla_n * Normal_cont + Normal_cont' * Sigma * Normal_cont * Nabla_n) * Normal_cont;
            end
@@ -96,11 +96,10 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            Fcont_loc = penalty * Gap * Normal_cont + lambda * Normal_cont + Gap * d_lambda_cont;  
         end   
 
+
         Ftarg(TargetBody.xloc(Index,:)) = Ftarg(TargetBody.xloc(Index,:)) + Nm_2412(xi,eta)' * Ftarg_loc; % redistribution over the nodes of target element 
         Fcont(DOFpositions) = Fcont(DOFpositions) + Fcont_loc;
-    end   
-
-    
+    end       
 end 
 
 % Assemblace
