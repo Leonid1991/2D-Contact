@@ -20,7 +20,7 @@ ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact surfac
 for ii = 1:size(ContactPoints,1) % loop over all contact points
   
     ContactPoint = ContactPoints(ii,:);  
-    Outcome = FindTargetPoint2(TargetBody,ContactPoint);
+    Outcome = FindTargetPoint_fast(TargetBody,ContactPoint);
     
     
     % Checking the condition of the penalty approach
@@ -35,7 +35,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
         % index - element under consideration
         [X,U] = GetCoorDisp(Outcome.Index,TargetBody.nloc,TargetBody.P0,TargetBody.u);
 
-        [xi,eta] = FindIsoCoord2(X,U,Outcome.Position); % finding isoparametric coodinates of the point
+        [xi,eta] = FindIsoCoord(X,U,Outcome.Position); % finding isoparametric coodinates of the point
                 
         Normal = Outcome.Normal; % outwards normal (from the targeted body)
         Gap = abs(Outcome.Gap);
@@ -58,7 +58,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            Node = ContactBody.contact.nodalid(ii);
            ElemenNumber = find(any(ContactBody.nloc == Node, 2), 1, 'first');
            [X2,U2] = GetCoorDisp(ElemenNumber,ContactBody.nloc,ContactBody.P0,ContactBody.u);
-           [xi2,eta2] = FindIsoCoord2(X2,U2,ContactPoint'); 
+           [xi2,eta2] = FindIsoCoord(X2,U2,ContactPoint'); 
            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
            % Traget

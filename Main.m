@@ -83,7 +83,7 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 %##################### Newton iter. parameters ######################
 imax=15;
 tol=1e-4;         
-steps= 20;
+steps= 10;
 total_steps = 0;
 titertot=0;  
 % %#################### Processing ######################
