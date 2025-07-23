@@ -25,7 +25,8 @@ function [Fc,Kc] = ContactForceVariation(Body1,Body2,penalty,approach)
        
         % returning all back to normal
         I_vec(ii)=0;
-        Body1.u = u1_backup;
-        Body2.u = u2_backup;
+        
     end    
-  
+    
+    Body1.u = u1_backup;
+    Body2.u = u2_backup;

@@ -15,8 +15,13 @@ Body1.shift.y = 0;
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 %#################### Mesh #########################################
-dx = 5;
-dy = 1;
+dx = 16;
+dy = 2;
+%##################### Contact ############################
+approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+pn = 1e6;
+penalty = pn;
+
 
 Body1.nElems.x = dx;
 Body1.nElems.y = dy;
@@ -64,11 +69,6 @@ Body2.edge1.loc.y = 0;
 
 Body2.edge2.loc.x = Body2.Lx;
 Body2.edge2.loc.y = Body2.Ly;
-
-%##################### Contact ############################
-approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
-pn = 1e12;
-penalty = pn;
  
 % Identification of possble contact surfaces
 % local positions (assuming all bodies in (0,0) )
@@ -81,9 +81,9 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);% 
 
 %##################### Newton iter. parameters ######################
-imax=15;
+imax=20;
 tol=1e-4;         
-steps= 10;
+steps= 20;
 total_steps = 0;
 titertot=0;  
 % %#################### Processing ######################
@@ -143,10 +143,25 @@ end
 fig_number = 1; 
 ShowNodeNumbers = false;
 disp('Static test')
-PostProcessing(Body1,fig_number,'b',ShowNodeNumbers)
+gam = 1/pn;
+
+% tstr = sprintf('\\gamma = %.e, g = %.6f', gam, Gap);
+% title(tstr)      % uses default TeX interpreter
+hold on 
+PostProcessing(Body1,fig_number,'b',ShowNodeNumbers);
 PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
 
+%%%%%%%%%%%%%%
+ContactNode_cont = Body1.contact.nodalid;
+DofsAtNode_cont = Body1.DofsAtNode;
+% current position of the "possible contact" nodes of the Contact Body
+ContactPoints_X = Body1.q(xlocChosen(DofsAtNode_cont, ContactNode_cont,1)) + ...
+                  Body1.u(xlocChosen(DofsAtNode_cont, ContactNode_cont,1));   ... % coords on X axis;
 
+ContactPoints_Y =  Body1.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2)) + ... % coords on Y axis
+                   Body1.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
+plot(ContactPoints_X,ContactPoints_Y,'og');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Gap = Gapfunc(Body1,Body2);
 fprintf('total steps is %d  \n', total_steps );
 fprintf('total gap is %10.6f  \n', Gap )

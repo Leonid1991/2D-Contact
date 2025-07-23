@@ -65,14 +65,10 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
 
            % Traget
            Sigma_targ = Sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta);
-           nabla_sigma_targ = nabla_sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta);                
-           Nabla_Sigma_n_targ = NablaMultiplication(nabla_sigma_targ,Normal_targ);
-           
+                      
            % contact
            Sigma_cont = Sigma_2412(ContactBody.E,ContactBody.nu,U2,X2,xi2,eta2);
-           nabla_sigma_cont = nabla_sigma_2412(ContactBody.E,ContactBody.nu,U2,X2,xi2,eta2);
-           Nabla_Sigma_n_cont = NablaMultiplication(nabla_sigma_cont,Normal_cont); 
-           
+                      
            % Normal force difference 
            Sigma_n = Normal_cont' * Sigma_cont * Normal_cont - Normal_targ' * Sigma_targ * Normal_targ;           
            lambda = Gap * norm(Sigma_n);
@@ -81,6 +77,13 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            d_lambda_cont = norm(Sigma_n)*Normal_cont; 
                       
            if approach >2 % adding nonlinear of gap    
+                
+               nabla_sigma_targ = nabla_sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta);                
+               Nabla_Sigma_n_targ = NablaMultiplication(nabla_sigma_targ,Normal_targ);
+
+               nabla_sigma_cont = nabla_sigma_2412(ContactBody.E,ContactBody.nu,U2,X2,xi2,eta2);
+               Nabla_Sigma_n_cont = NablaMultiplication(nabla_sigma_cont,Normal_cont); 
+
                Nabla_Sigma_n = Normal_cont' * Nabla_Sigma_n_cont * Normal_cont + Normal_targ' * Nabla_Sigma_n_targ * Normal_targ; 
                d_lambda_targ = d_lambda_targ + Gap * Nabla_Sigma_n * Normal_targ;
                d_lambda_cont = d_lambda_cont + Gap * Nabla_Sigma_n * Normal_cont; 
