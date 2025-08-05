@@ -9,7 +9,7 @@ function PostProcessing(Body,fig_number,color,ShowNodeNumbers)
         disp(sprintf('%dx%d & %4d  & %10.6f & %10.6f & %10.6f  \\\\',Results(k,:)))
     end   
     figure(fig_number)
-    DrawingLimits=[0 2.5 -1 0.5 -0.1 0.1]; 
+    DrawingLimits=[0 2.5 -1.25 0.5 -0.1 0.1]; 
     % DrawMesh2412(Body.P0,Body.nloc, zeros(Body.nx,1),DofsAtNode,DrawingLimits,'b')
     DrawMesh2412(Body.P0,Body.nloc,Body.u,DofsAtNode,DrawingLimits,color)  
     set(gca, 'FontSize', [FontSize], 'FontName','Times New Roman');

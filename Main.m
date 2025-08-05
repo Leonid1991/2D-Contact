@@ -14,14 +14,16 @@ Body1.shift.y = 0;
 
 Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
+
 %#################### Mesh #########################################
-dx = 16;
+dx = 12;
 dy = 2;
+
 %##################### Contact ############################
 approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
-pn = 1e6;
-penalty = pn;
 
+pn = 1e12;
+penalty = pn;
 
 Body1.nElems.x = dx;
 Body1.nElems.y = dy;
@@ -82,8 +84,8 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 
 %##################### Newton iter. parameters ######################
 imax=20;
-tol=1e-4;         
-steps= 20;
+tol=1e-7;         
+steps= 40;
 total_steps = 0;
 titertot=0;  
 % %#################### Processing ######################
@@ -144,13 +146,9 @@ fig_number = 1;
 ShowNodeNumbers = false;
 disp('Static test')
 gam = 1/pn;
-
-% tstr = sprintf('\\gamma = %.e, g = %.6f', gam, Gap);
-% title(tstr)      % uses default TeX interpreter
 hold on 
 PostProcessing(Body1,fig_number,'b',ShowNodeNumbers);
 PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
-
 %%%%%%%%%%%%%%
 ContactNode_cont = Body1.contact.nodalid;
 DofsAtNode_cont = Body1.DofsAtNode;
@@ -161,9 +159,19 @@ ContactPoints_X = Body1.q(xlocChosen(DofsAtNode_cont, ContactNode_cont,1)) + ...
 ContactPoints_Y =  Body1.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2)) + ... % coords on Y axis
                    Body1.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
 plot(ContactPoints_X,ContactPoints_Y,'og');
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if approach == 0
+   typeM = 'No contact';
+elseif approach == 1
+   typeM = 'Penalty'; 
+else    
+   typeM = 'Nitsche';
+end
 Gap = Gapfunc(Body1,Body2);
+gapStr = sprintf('%.5f', Gap);
+fullstr = ['Method = ', typeM, ', Total Gap = ', gapStr];
+title(fullstr, 'Interpreter', 'latex');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('total steps is %d  \n', total_steps );
-fprintf('total gap is %10.6f  \n', Gap )
+fprintf('total gap is %10.22f  \n', Gap )
 
 
