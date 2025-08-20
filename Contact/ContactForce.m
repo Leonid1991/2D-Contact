@@ -1,4 +1,5 @@
 function Fc =  ContactForce(ContactBody,TargetBody,penalty,approach)
+
 % Target Body is a body points are projected
 % Contact Body is a body points are taken for projection
 
@@ -22,9 +23,9 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
     ContactPoint = ContactPoints(ii,:);  
     Outcome = FindTargetPoint_fast(TargetBody,ContactPoint);
     
-    
     % Checking the condition of the penalty approach
     if Outcome.Gap < 0 % we have meaningful outcome from the search
+
         % negative because after penetration direction from contact point
         % to its projection is opposite to outwards normal
 
@@ -109,4 +110,3 @@ end
 
 % Assemblace
 Fc = [Fcont;Ftarg]; 
-

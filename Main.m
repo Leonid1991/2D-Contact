@@ -16,13 +16,14 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 4;
+dx = 10;
 dy = 2;
 
 %##################### Contact ############################
-approach = 2; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 5; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+              % 5 - Lagrange multiplier   
 
-pn = 1e1;
+pn = 1e4;
 penalty = pn;
 
 Body1.nElems.x = dx;
@@ -84,10 +85,11 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 
 %##################### Newton iter. parameters ######################
 imax=20;
-tol=1e-7;         
+tol=1e-6;         
 steps= 20;
 total_steps = 0;
 titertot=0;  
+ 
 % %#################### Processing ######################
 for ii = 1:steps
 
@@ -96,45 +98,58 @@ for ii = 1:steps
     Body1 = CreateFext(ii,steps,Body1,type);
     Body2 = CreateFext(ii,steps,Body2,type);
     
+
     % contact convergence
     for jj = 1:imax
         tic;
 
         total_steps = total_steps + 1;
         % interacation of two bodies
-        [Fc,Kc] = Contact(Body1,Body2,penalty,approach);
+        [Fc,Kc,Gap,GapNab] = Contact(Body1,Body2,penalty,approach);
 
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
-         
+        
         % Assemblance of stiffnesses
         Ke = [            Body1.Fint.K zeros(Body1.nx,Body2.nx);
               zeros(Body2.nx,Body1.nx)            Body2.Fint.K];
         K = Ke + Kc;
-    
+          
         % Assemblance of forces
         Fe = [Body1.Fint.vec; Body2.Fint.vec];
         Fext = [Body1.Fext.vec; Body2.Fext.vec];
         ff =  Fe - Fext + Fc;
-        
         % Calculations
         K_bc = K(bc,bc); 
         ff_bc = ff(bc);
         deltaf = ff_bc/norm(Fext(bc)); 
-        uu_bc = -K_bc\ff_bc;      
-    
+
+        if approach < 5 % Penalty & Nitsche approaches
+                       
+        else % Lagrange multiplier 
+           
+           GapNab_bc = GapNab(bc);
+            
+           K_bc = [     K_bc GapNab_bc;
+                   GapNab_bc'       0];
+
+           ff_bc = [ff_bc; 0];
+
+        end    
+
+        uu_bc = -K_bc\ff_bc;  
+
         % Separation
         Body1.u(Body1.bc) = Body1.u(Body1.bc) + uu_bc(1:Body1.ndof);
-        Body2.u(Body2.bc) = Body2.u(Body2.bc) + uu_bc(Body1.ndof + 1:end);
+        Body2.u(Body2.bc) = Body2.u(Body2.bc) + uu_bc(Body1.ndof + 1:Body1.ndof + Body2.ndof);
          
         Body1 = Analys(Body1);
         Body2 = Analys(Body2);
-        
-        Gap = Gapfunc(Body1,Body2);
+
         titer=toc;
         titertot=titertot+titer;
 
-        if printStatus(deltaf, uu_bc, tol*sum(bc), ii, jj, imax, steps, titertot,Gap)
+        if printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot, Gap)
             break;  
         end 
 
@@ -166,12 +181,13 @@ elseif approach == 1
 else    
    typeM = 'Nitsche';
 end
-Gap = Gapfunc(Body1,Body2);
 gapStr = sprintf('%.5f', Gap);
 fullstr = ['Method = ', typeM, ', Total Gap = ', gapStr];
 title(fullstr, 'Interpreter', 'latex');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('total steps is %d  \n', total_steps );
 fprintf('total gap is %10.22f  \n', Gap )
+
+
 
 

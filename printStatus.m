@@ -1,10 +1,13 @@
 function status = printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot, Gap)
     
-     if  nargin < 9 % Gap is optional
-         Gap= NaN;
-     end   
+     persistent previousDisp previousDisp_2
+
+     if jj == 1
+        previousDisp = 0; 
+        previousDisp_2 = 0;
+     end 
         
-     if all(abs(deltaf)<tol) || all(abs(uu_bc)<tol^4)
+     if all(abs(deltaf)<tol) || all(abs(uu_bc)<tol) || (abs(2*norm(uu_bc) - previousDisp - previousDisp_2)<tol) 
          if ~isnan(Gap)
              fprintf('Convergence: %10.4f, Displacements norm: %10.4f, Total gap: %10.7f\n', norm(abs(deltaf)), norm(uu_bc), Gap);            
          else
@@ -23,3 +26,11 @@ function status = printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot,
          end
          status = false;
      end 
+
+  
+     % Update previous steps' meanings
+     if (jj > 1) && (jj < imax)
+        previousDisp_2 = previousDisp;
+        previousDisp = norm(uu_bc);
+        
+     end
