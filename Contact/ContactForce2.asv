@@ -95,7 +95,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            d_lambda2 = NablaMultiplication(nabla_sigma2,Normal) * vec; 
 
            % assemblance
-           lambda = vec' * (Sigma - Sigma2) * Normal; 
+           lambda = vec' * (Sigma + Sigma2) * Normal; 
 
            % calculation  & redistribution over the nodes of target elemen
            Ftarg_loc = penalty * Gap * Nm_2412(xi,eta)'*Normal  + lambda*Nm_2412(xi,eta)'*Normal + Gap * Nm_2412(xi,eta)'*d_lambda;
