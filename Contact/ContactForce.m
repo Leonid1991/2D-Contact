@@ -72,7 +72,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            % Normal force difference 
            Sigma_n = Normal_cont' * Sigma_cont * Normal_cont - Normal_targ' * Sigma_targ * Normal_targ;           
            lambda = Gap * norm(Sigma_n);
-            
+           
            d_lambda_targ = norm(Sigma_n)*Normal_targ;
            d_lambda_cont = norm(Sigma_n)*Normal_cont; 
                       

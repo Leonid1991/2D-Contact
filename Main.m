@@ -16,13 +16,13 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 12;
+dx = 4;
 dy = 2;
 
 %##################### Contact ############################
-approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 2; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
 
-pn = 1e12;
+pn = 1e1;
 penalty = pn;
 
 Body1.nElems.x = dx;
@@ -49,7 +49,7 @@ bc = [Body1.bc Body2.bc];
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
 
-Body1.Fext.y =-62.5*10^(6);
+Body1.Fext.y =-62.5*10^(6)*2;
 
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
@@ -85,14 +85,14 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 %##################### Newton iter. parameters ######################
 imax=20;
 tol=1e-7;         
-steps= 40;
+steps= 20;
 total_steps = 0;
 titertot=0;  
 % %#################### Processing ######################
 for ii = 1:steps
 
     % Update forces, supported loading types: linear, exponential, quadratic, cubic;
-    type = "linear";
+    type = "cubic";
     Body1 = CreateFext(ii,steps,Body1,type);
     Body2 = CreateFext(ii,steps,Body2,type);
     
