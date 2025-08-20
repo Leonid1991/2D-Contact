@@ -1,0 +1,105 @@
+/CLEAR,NOSTART
+/TITLE, Contact Problem
+/PREP7
+
+! --- Parameters ---
+w = 0.05
+h = 0.5
+l = 2
+Force = -62500000/2
+dForce= 40
+
+E1 = 2.07e11
+E2 = 2.07e11
+NU1 = 0.3
+NU2 = 0.3
+
+SIZE_ALL = 0.025
+
+! --- Material Properties ---
+MP,EX,1,E1              
+MP,NUXY,1,NU1
+MP,EX,2,E2
+MP,NUXY,2,NU2
+
+! --- Element Types ---
+ET,1,SOLID95
+ET,2,SOLID95
+ET,3,CONTA174
+
+
+ET,4,TARGE170
+R,2,1e15,1.0,0.0
+KEYOPT,3,2,1
+KEYOPT,3,4,3
+KEYOPT,3,6,0
+KEYOPT,3,12,0
+
+! --- Geometry ---
+BLOCK, 0,w, 0,  h, 0, l     ! Bottom block
+BLOCK, 0,w, h,2*h, 0, l     ! Top block
+
+
+! --- Assign materials ---
+VSEL, S, LOC, Y,0,h
+VATT,1,,1 
+VSEL, ALL
+
+VSEL, U, LOC, Y,0,h
+VATT,2,,2 
+VSEL, ALL
+
+! --- Mesh Size Controls ---
+ESIZE, SIZE_ALL
+VMESH, ALL
+ALLSEL,ALL
+
+
+ESEL,S,MAT,,1  ! Select elements with material 1 
+NSEL,S,LOC,Y,h ! Its upper nodes
+TSHAP,QUA8  
+CM,NodeContact,NODE
+TYPE,3         !   CONTA174
+MAT,1
+ESURF
+
+ESEL,S,MAT,,2  ! Select elements with material 2 
+NSEL,S,LOC,Y,h ! Its down nodes
+TSHAP,QUA8
+CM,NodeTarget,NODE
+TYPE,4         !  TARGE170 
+ESURF
+ALLSEL,ALL
+
+
+/SOLU
+ANTYPE,STAT
+NROPT,FULL
+SOLCON,ON
+NSUBST,dForce
+NLGEOM,ON
+
+NSEL,S,LOC,Z,0
+D,ALL,ALL
+ALLSEL,ALL
+
+NSEL,S,LOC,X,0
+D,all,UX,0
+ALLSEL,ALL
+
+
+NSEL,S,LOC,Z,l
+NSEL,U,LOC,Y,0,h
+*GET,MY_NUM,NODE,,COUNT
+F,ALL,FY, Force/MY_NUM
+ALLSEL,ALL
+
+
+! ------- Solution -------
+SOLVE                  
+FINISH
+
+! ------- PostProcess -------
+/POST1
+PLNSOL, U, Y, 0, 1  
+
