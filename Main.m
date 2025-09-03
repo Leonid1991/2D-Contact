@@ -16,14 +16,14 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 10;
-dy = 2;
+dx = 5;
+dy = 1;
 
 %##################### Contact ############################
-approach = 5; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
 
-pn = 1e4;
+pn = 1e10;
 penalty = pn;
 
 Body1.nElems.x = dx;
@@ -50,7 +50,7 @@ bc = [Body1.bc Body2.bc];
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
 
-Body1.Fext.y =-62.5*10^(6)*2;
+Body1.Fext.y =-62.5*10^(7)/2;
 
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
@@ -85,7 +85,7 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 
 %##################### Newton iter. parameters ######################
 imax=20;
-tol=1e-6;         
+tol=1e-5;         
 steps= 20;
 total_steps = 0;
 titertot=0;  
@@ -105,7 +105,7 @@ for ii = 1:steps
 
         total_steps = total_steps + 1;
         % interacation of two bodies
-        [Fc,Kc,Gap,GapNab] = Contact(Body1,Body2,penalty,approach);
+        [Fc,Kc,GapNab] = Contact(Body1,Body2,penalty,approach);
 
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
@@ -124,16 +124,21 @@ for ii = 1:steps
         ff_bc = ff(bc);
         deltaf = ff_bc/norm(Fext(bc)); 
 
-        if approach < 5 % Penalty & Nitsche approaches
-                       
-        else % Lagrange multiplier 
+        if approach > 4 % Lagrange multiplier 
            
            GapNab_bc = GapNab(bc);
-            
+           %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+           % from formula (14) of Papadopoulos et al. (1998)
+           % omega = sqrt(eps);
+           % K_bc = K_bc + omega*(GapNab_bc*GapNab_bc');
+           % f_p = 0 -> ff_bc + omega * GapNab_bc * f_p == ff_bc
+           %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
            K_bc = [     K_bc GapNab_bc;
                    GapNab_bc'       0];
 
-           ff_bc = [ff_bc; 0];
+           ff_bc = [ff_bc; tol];
+
 
         end    
 
@@ -149,6 +154,7 @@ for ii = 1:steps
         titer=toc;
         titertot=titertot+titer;
 
+        Gap = Gapfunc(Body1,Body2);
         if printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot, Gap)
             break;  
         end 
@@ -157,14 +163,15 @@ for ii = 1:steps
     
 end
 % %##################### Post-Processing ######################
+typeM = approachName(approach);
 fig_number = 1; 
 ShowNodeNumbers = false;
-disp('Static test')
+fprintf('Static test, contact approach = %s  \n', typeM);
 gam = 1/pn;
 hold on 
 PostProcessing(Body1,fig_number,'b',ShowNodeNumbers);
 PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
-%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ContactNode_cont = Body1.contact.nodalid;
 DofsAtNode_cont = Body1.DofsAtNode;
 % current position of the "possible contact" nodes of the Contact Body
@@ -174,15 +181,8 @@ ContactPoints_X = Body1.q(xlocChosen(DofsAtNode_cont, ContactNode_cont,1)) + ...
 ContactPoints_Y =  Body1.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2)) + ... % coords on Y axis
                    Body1.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
 plot(ContactPoints_X,ContactPoints_Y,'og');
-if approach == 0
-   typeM = 'No contact';
-elseif approach == 1
-   typeM = 'Penalty'; 
-else    
-   typeM = 'Nitsche';
-end
 gapStr = sprintf('%.5f', Gap);
-fullstr = ['Method = ', typeM, ', Total Gap = ', gapStr];
+fullstr = "Method = " + typeM + ", Total Gap = " + gapStr;
 title(fullstr, 'Interpreter', 'latex');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('total steps is %d  \n', total_steps );

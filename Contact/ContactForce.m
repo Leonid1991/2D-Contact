@@ -38,7 +38,7 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
 
         [xi,eta] = FindIsoCoord(X,U,Outcome.Position); % finding isoparametric coodinates of the point
                 
-        Normal = Outcome.Normal; % outwards normal (from the targeted body)
+        Normal = Outcome.Normal; % outwards normal (from the targeted body to contact one)
         Gap = abs(Outcome.Gap);
         Index = Outcome.Index;
 
@@ -49,8 +49,8 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
         if approach == 1
           
            % calculation of the forces applied to the nodes of contact elemnet 
-           Fcont_loc =  penalty * Gap * Normal_cont;                                                                              
-           Ftarg_loc =  penalty * Gap * Normal_targ;
+           Fcont_loc = penalty * Gap * Normal_cont;                                                                              
+           Ftarg_loc = penalty * Gap * Normal_targ;
             
         % Nitsche approach   
         elseif approach > 1

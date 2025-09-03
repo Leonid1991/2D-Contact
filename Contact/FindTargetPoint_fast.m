@@ -1,4 +1,4 @@
-function Result = FindTargetPoint2(TargetBody,ContactPoint)
+function Result = FindTargetPoint_fast(TargetBody,ContactPoint)
 
 
     DofsAtNode_targ = TargetBody.DofsAtNode;

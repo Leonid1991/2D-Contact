@@ -1,4 +1,4 @@
-function [Fc,Kc,Gap,GapNab] = ContactVariation(Body1,Body2,penalty,approach)
+function [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach)
     
     % Current gap calculation 
     Gap = Gapfunc(Body1,Body2);

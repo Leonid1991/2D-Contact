@@ -1,13 +1,17 @@
 function status = printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot, Gap)
     
-     persistent previousDisp previousDisp_2
+     persistent previousForce previousDisp previousDisp_2
 
      if jj == 1
+        previousForce = 0; 
         previousDisp = 0; 
         previousDisp_2 = 0;
      end 
         
-     if all(abs(deltaf)<tol) || all(abs(uu_bc)<tol) || (abs(2*norm(uu_bc) - previousDisp - previousDisp_2)<tol) 
+     if all(abs(deltaf)<tol) || ...
+         all(abs(uu_bc)<tol^2) ||  abs(norm(uu_bc) - previousDisp)<tol^2 || ... % stop when the change is too small    
+         (abs(norm(uu_bc) - previousDisp)<tol && abs(norm(uu_bc) - previousDisp_2)<tol) || ... % stop when small changes are repeating
+         ( all(abs(deltaf) - previousForce)<tol && abs(norm(uu_bc) - previousDisp)<tol ) % additional condition for exit  
          if ~isnan(Gap)
              fprintf('Convergence: %10.4f, Displacements norm: %10.4f, Total gap: %10.7f\n', norm(abs(deltaf)), norm(uu_bc), Gap);            
          else
@@ -30,6 +34,7 @@ function status = printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot,
   
      % Update previous steps' meanings
      if (jj > 1) && (jj < imax)
+        previousForce = deltaf;
         previousDisp_2 = previousDisp;
         previousDisp = norm(uu_bc);
         
