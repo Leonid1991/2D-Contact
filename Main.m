@@ -16,17 +16,28 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 5;
+dx = 10;
 dy = 1;
 
 %##################### Contact ############################
 approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
 
-pn = 1e10;
-penalty = pn;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% An example of very stiff problem for the code:
+% approach = 1 (penalty), pn = 1e17; ContactPoints = "nodes"
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Body1.nElems.x = dx;
+pn = 1e9; 
+penalty = pn;
+% how contact points are chosen
+ContactPoints.name = "LinSpace"; % options: "nodes", "Gauss", "LinSpace" 
+ContactPoints.n = 5; % number of points per segment (Gauss & LinSpace points)
+ContactForceByPoints = ContacPointSetting(ContactPoints);
+% N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
+% Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements isn't counted)
+
+Body1.nElems.x = 2*dx;
 Body1.nElems.y = dy;
 
 Body2.nElems.x = dx;
@@ -85,7 +96,7 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 
 %##################### Newton iter. parameters ######################
 imax=20;
-tol=1e-5;         
+tol=1e-4;         
 steps= 20;
 total_steps = 0;
 titertot=0;  
@@ -105,7 +116,7 @@ for ii = 1:steps
 
         total_steps = total_steps + 1;
         % interacation of two bodies
-        [Fc,Kc,GapNab] = Contact(Body1,Body2,penalty,approach);
+        [Fc,Kc,GapNab] = Contact(Body1,Body2,penalty,approach,ContactForceByPoints);
 
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
@@ -155,6 +166,7 @@ for ii = 1:steps
         titertot=titertot+titer;
 
         Gap = Gapfunc(Body1,Body2);
+
         if printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot, Gap)
             break;  
         end 

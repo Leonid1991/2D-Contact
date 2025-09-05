@@ -1,4 +1,7 @@
-function Fc =  ContactForce(ContactBody,TargetBody,penalty,approach)
+function Fc =  ContactForceLinSpace(ContactBody,TargetBody,penalty,approach,n)
+% It is the same as 'ContactForce.m', but instead of nodes we want to
+% consider Gauss points, according to Thesis Gary R. (1993) - see Mendeley
+% Section 3.3 (Mendeley page - 41 p.)
 
 % Target Body is a body points are projected
 % Contact Body is a body points are taken for projection
@@ -18,30 +21,63 @@ ContactPoints_Y =  ContactBody.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2))
 
 ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact surfaces of the contact body 
 
-for ii = 1:size(ContactPoints,1) % loop over all contact points
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% transition to Gauss points
+nloc_cont = ContactBody.nloc;
+
+ContactPoints2 = ContactPoints(1,:); % taking the first node position, otherwise later it will be omitted 
+ContactPointsElements = ContactBody.contact.nodalid(1); % % taking the first node number
+
+for ii = 2:size(ContactPoints,1)
+    % taking two consecutive nodes
+    a = ContactPoints(ii-1,:);
+    b = ContactPoints(ii,:);    
+    % idea that on the edge, two nodes are uniquely belong to one element only 
+    ElemenNumber = find(any(nloc_cont == ii-1, 2) & any(nloc_cont == ii, 2)); 
+    xx = geospace(a(1),b(1),n)'; % split in x- axis
+    yy = geospace(a(2),b(2),n)'; % split in y- axis
+
+    if abs(a(1) - b(1)) < sqrt(eps)
+        xx = a(1)*ones(n,1);
+    elseif abs( a(2) - b(2) ) < sqrt(eps)
+        yy = a(2)*ones(n,1); 
+    end
+
+    % Following the Intercept theorem (Thales's theorem according Russian naming):
+    % the function devide x- and y- axes in the same propotions 
+    ContactPoints2 = [ContactPoints2; xx(2:end) yy(2:end)]; % excluding the node from the previous devision
+    ContactPointsElements = [ContactPointsElements; ElemenNumber*ones(n-1,1)]; % multiplication to correlate with points
+end    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+for ii = 1:size(ContactPoints2,1) % loop over all contact points
   
-    ContactPoint = ContactPoints(ii,:);  
+    ContactPoint = ContactPoints2(ii,:);  
     Outcome = FindTargetPoint_fast(TargetBody,ContactPoint);
-    
+    nloc_targ = TargetBody.nloc;
     % Checking the condition of the penalty approach
     if Outcome.Gap < 0 % we have meaningful outcome from the search
 
         % negative because after penetration direction from contact point
         % to its projection is opposite to outwards normal
 
-        % DOFs of the contact element under consideration
-        DOFpositions = xlocChosen(DofsAtNode_cont, ContactNode_cont(ii),1:2);
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        ElemenNumber = ContactPointsElements(ii);                
+        DOFpositions_cont = ContactBody.xloc(ElemenNumber,:); % DOFs of the contact element under consideration
+        [X2,U2] = GetCoorDisp(ElemenNumber,nloc_cont,ContactBody.P0,ContactBody.u);
+        [xi2,eta2] = FindIsoCoord(X2,U2,ContactPoint');  % finding the isocoordinates of the contact point
 
-        % Now we need to find forces applied to the target body due to the interation
         % index - element under consideration
-        [X,U] = GetCoorDisp(Outcome.Index,TargetBody.nloc,TargetBody.P0,TargetBody.u);
+        Index = Outcome.Index;
+        DOFpositions_targ = TargetBody.xloc(Index,:);
+        [X,U] = GetCoorDisp(Index,nloc_targ,TargetBody.P0,TargetBody.u);
+        [xi,eta] = FindIsoCoord(X,U,Outcome.Position); % finding isoparametric coodinates of the target point    
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        [xi,eta] = FindIsoCoord(X,U,Outcome.Position); % finding isoparametric coodinates of the point
-                
         Normal = Outcome.Normal; % outwards normal (from the targeted body to contact one)
         Gap = abs(Outcome.Gap);
-        Index = Outcome.Index;
-
+        
         Normal_cont = -Normal;
         Normal_targ =  Normal;
         
@@ -53,17 +89,8 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            Ftarg_loc = penalty * Gap * Normal_targ;
             
         % Nitsche approach   
-        elseif approach > 1
-           
-           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-           % finding the isocoordinates and element numbers of the corrseponded
-           % contact element
-           Node = ContactBody.contact.nodalid(ii);
-           ElemenNumber = find(any(ContactBody.nloc == Node, 2), 1, 'first');
-           [X2,U2] = GetCoorDisp(ElemenNumber,ContactBody.nloc,ContactBody.P0,ContactBody.u);
-           [xi2,eta2] = FindIsoCoord(X2,U2,ContactPoint'); 
-           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+        elseif (approach > 1) && (approach < 5)
+                     
            % Traget
            Sigma_targ = Sigma_2412(TargetBody.E,TargetBody.nu,U,X,xi,eta);
                       
@@ -102,9 +129,9 @@ for ii = 1:size(ContactPoints,1) % loop over all contact points
            Fcont_loc = penalty * Gap * Normal_cont + lambda * Normal_cont + Gap * d_lambda_cont;  
         end   
 
-
-        Ftarg(TargetBody.xloc(Index,:)) = Ftarg(TargetBody.xloc(Index,:)) + Nm_2412(xi,eta)' * Ftarg_loc; % redistribution over the nodes of target element 
-        Fcont(DOFpositions) = Fcont(DOFpositions) + Fcont_loc;
+        % redistribution over the nodes 
+        Ftarg(DOFpositions_targ) = Ftarg(DOFpositions_targ) + Nm_2412(xi,eta)'   * Ftarg_loc; 
+        Fcont(DOFpositions_cont) = Fcont(DOFpositions_cont) + Nm_2412(xi2,eta2)' * Fcont_loc;
     end       
 end 
 
