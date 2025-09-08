@@ -1,4 +1,4 @@
-function Fc =  ContactForceNode(ContactBody,TargetBody,penalty,approach,~)
+function Fc =  ContactForceNode(ContactBody,TargetBody,penalty,approach)
 
 % Target Body is a body points are projected
 % Contact Body is a body points are taken for projection

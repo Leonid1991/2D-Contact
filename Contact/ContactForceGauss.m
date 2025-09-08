@@ -20,21 +20,19 @@ ContactPoints_Y =  ContactBody.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2))
                    ContactBody.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
 
 ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact surfaces of the contact body 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % transition to Gauss points
 nloc_cont = ContactBody.nloc;
 ContactPoints2 = []; 
 ContactPointsElements = [];
+ContactPoints2weihgt = [];
 for ii = 2:size(ContactPoints,1)
     % taking two consecutive nodes
     a = ContactPoints(ii-1,:);
     b = ContactPoints(ii,:);    
     % idea that on the edge, two nodes are uniquely belong to one element only 
     ElemenNumber = find(any(nloc_cont == ii-1, 2) & any(nloc_cont == ii, 2));     
-    % [~,w] = gauleg2(1,-1,n); % 
-    [xx,~] = gauleg2(a(1),b(1),n); % split in x- axis
+    [xx,ww] = gauleg2(a(1),b(1),n); % split in x- axis
     [yy,~] = gauleg2(a(2),b(2),n); % split in y- axis
 
     % just a test, that it correlates with "ContactForceNode.m" 
@@ -46,12 +44,14 @@ for ii = 2:size(ContactPoints,1)
     % the function devide x- and y- axes in the same propotions 
     ContactPoints2 = [ContactPoints2; xx yy];
     ContactPointsElements = [ContactPointsElements; ElemenNumber*ones(n,1)]; % multiplication to correlate with points
+    ContactPoints2weihgt = [ContactPoints2weihgt; ww];
 end    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for ii = 1:size(ContactPoints2,1) % loop over all contact points
   
     ContactPoint = ContactPoints2(ii,:);  
+    weight = ContactPoints2weihgt(ii);
     Outcome = FindTargetPoint_fast(TargetBody,ContactPoint);
     nloc_targ = TargetBody.nloc;
     % Checking the condition of the penalty approach
@@ -80,7 +80,7 @@ for ii = 1:size(ContactPoints2,1) % loop over all contact points
         Normal_targ =  Normal;
         
         % penalty approach
-        if approach == 1
+        if (approach == 1) || (approach == 6) 
           
            % calculation of the forces applied to the nodes of contact elemnet 
            Fcont_loc = penalty * Gap * Normal_cont;                                                                              

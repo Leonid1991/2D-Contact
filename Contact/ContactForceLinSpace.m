@@ -82,7 +82,7 @@ for ii = 1:size(ContactPoints2,1) % loop over all contact points
         Normal_targ =  Normal;
         
         % penalty approach
-        if approach == 1
+        if (approach == 1) || (approach == 6) 
           
            % calculation of the forces applied to the nodes of contact elemnet 
            Fcont_loc = penalty * Gap * Normal_cont;                                                                              

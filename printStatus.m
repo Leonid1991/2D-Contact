@@ -20,7 +20,7 @@ function status = printStatus(deltaf, uu_bc, tol, ii, jj, imax, steps, titertot,
          fprintf('Solution for %d / %d step  is found on %d iteration, Total CPU-time: %f\n', ii, steps, jj, titertot);
          status = true;
      elseif jj==imax 
-         fprintf('The solution for %d step is not found. The maximum number of iterations is reached. Total CPU-time: %d\n', ii, jj);
+         fprintf('The solution for %d step is not found. The maximum number of iterations is reached. Total CPU-time: %.3f\n', ii, titertot);
          status = false;   
      else     
          if ~isnan(Gap)

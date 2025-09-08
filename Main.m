@@ -20,24 +20,26 @@ dx = 10;
 dy = 1;
 
 %##################### Contact ############################
-approach = 1; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 6; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
-
+              % 6 - penalty (simplified )  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % An example of very stiff problem for the code:
 % approach = 1 (penalty), pn = 1e17; ContactPoints = "nodes"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pn = 1e9; 
-penalty = pn;
 % how contact points are chosen
-ContactPoints.name = "LinSpace"; % options: "nodes", "Gauss", "LinSpace" 
-ContactPoints.n = 5; % number of points per segment (Gauss & LinSpace points)
-ContactForceByPoints = ContacPointSetting(ContactPoints);
+ContactPoints = "Gauss"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
-% Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements isn't counted)
+% Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements is omitted)
+n = 3; % number of points per segment (Gauss & LinSpace points)
+ContactForce = ContactForceSetting(ContactPoints,n);
 
-Body1.nElems.x = 2*dx;
+GapCalculation = "Gauss"; % options: "nodes", "Gauss" 
+Gapfunc = GapCalculationSetting(GapCalculation, n);
+
+Body1.nElems.x = dx;
 Body1.nElems.y = dy;
 
 Body2.nElems.x = dx;
@@ -116,8 +118,8 @@ for ii = 1:steps
 
         total_steps = total_steps + 1;
         % interacation of two bodies
-        [Fc,Kc,GapNab] = Contact(Body1,Body2,penalty,approach,ContactForceByPoints);
-
+        [Fc,Kc,GapNab] = Contact(Body1,Body2,pn,approach,ContactForce,Gapfunc);
+        
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
         
@@ -133,26 +135,28 @@ for ii = 1:steps
         % Calculations
         K_bc = K(bc,bc); 
         ff_bc = ff(bc);
+        GapNab_bc = GapNab(bc);
+
         deltaf = ff_bc/norm(Fext(bc)); 
+        
+        if approach == 5
+       
+               %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+               % from formula (14) of Papadopoulos et al. (1998)
+               % omega = sqrt(eps);
+               % K_bc = K_bc + omega*(GapNab_bc*GapNab_bc');
+               % f_p = 0 -> ff_bc + omega * GapNab_bc * f_p == ff_bc
+               %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+               K_bc = [     K_bc GapNab_bc;
+                       GapNab_bc'       0];   
+               ff_bc = [ff_bc; tol];
 
-        if approach > 4 % Lagrange multiplier 
-           
-           GapNab_bc = GapNab(bc);
-           %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-           % from formula (14) of Papadopoulos et al. (1998)
-           % omega = sqrt(eps);
-           % K_bc = K_bc + omega*(GapNab_bc*GapNab_bc');
-           % f_p = 0 -> ff_bc + omega * GapNab_bc * f_p == ff_bc
-           %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-           K_bc = [     K_bc GapNab_bc;
-                   GapNab_bc'       0];
-
-           ff_bc = [ff_bc; tol];
-
-
+        elseif approach == 6 
+                   
+               K = Ke + pn/2 * (GapNab * GapNab');
+               K_bc = K(bc,bc);                
         end    
-
+           
         uu_bc = -K_bc\ff_bc;  
 
         % Separation

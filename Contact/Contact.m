@@ -1,4 +1,4 @@
-function [Fc,Kc,GapNab]= Contact(Body1,Body2,penalty,approach,ContactForceByPoints)
+function [Fc,Kc,GapNab]= Contact(Body1,Body2,penalty,approach,ContactForce,Gapfunc)
 
 % Initialize the global contact forces
 Fc = zeros(Body1.nx + Body2.nx,1);
@@ -11,7 +11,7 @@ GapNab = zeros(Body1.nx + Body2.nx,1);
 
 if approach ~=0
 
-    [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactForceByPoints);    
+    [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactForce,Gapfunc);    
 
 end
 

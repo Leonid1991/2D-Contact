@@ -1,4 +1,4 @@
-function Gap = Gapfunc(ContactBody,TargetBody)
+function Gap = GapfuncNodes(ContactBody,TargetBody)
 
 Gap = 0;
 
@@ -10,6 +10,7 @@ ContactPoints_Y =  ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.c
                    ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2));
 
 ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact body of the contact surfaces
+
 for ii = 1:size(ContactPoints,1) % loop over all contact points
   
     ContactPoint = ContactPoints(ii,:);
