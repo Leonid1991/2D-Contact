@@ -1,4 +1,4 @@
-function [xi,eta] = FindIsoCoord2(X,U,point)
+function [xi,eta] = FindIsoCoord(X,U,point)
 
     r = Nm_2412(0,0)*(X + U);        
     Xi = [0;0];

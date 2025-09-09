@@ -1,30 +1,29 @@
-function Result = FindTargetPoint_fast(TargetBody,ContactPoint)
+function Result = FindPoint(Body,Point)
 
-
-    DofsAtNode_targ = TargetBody.DofsAtNode;
-    ContactNode_targ = TargetBody.contact.nodalid;
-    nloc = TargetBody.nloc;
+    DofsAtNode= Body.DofsAtNode;
+    SurfaceNodes = Body.contact.nodalid;
+    nloc = Body.nloc;
      
-    % current position of the "possible contact" nodes of the Contact Body
-    TargetPoints_X = TargetBody.q(xlocChosen(DofsAtNode_targ, ContactNode_targ,1)) + ...
-                     TargetBody.u(xlocChosen(DofsAtNode_targ, ContactNode_targ,1));   ... % coords on X axis;
+    % current position of the "possible contact" nodes of the Body
+    SurfacePoints_X = Body.q(xlocChosen(DofsAtNode,SurfaceNodes,1)) + ... % coords on X axis;
+                      Body.u(xlocChosen(DofsAtNode,SurfaceNodes,1));
     
-    TargetPoints_Y = TargetBody.q(xlocChosen(DofsAtNode_targ,ContactNode_targ,2)) + ... % coords on Y axis
-                     TargetBody.u(xlocChosen(DofsAtNode_targ,ContactNode_targ,2));
+    SurfacePoints_Y = Body.q(xlocChosen(DofsAtNode,SurfaceNodes,2)) + ... % coords on Y axis
+                      Body.u(xlocChosen(DofsAtNode,SurfaceNodes,2));
     
-    TargetPoints = [TargetPoints_X TargetPoints_Y]; % nodes of the contact surfaces of the contact body 
+    SurfacePoints = [SurfacePoints_X SurfacePoints_Y]; % nodes of the contact surfaces of the contact body 
     
-    distances = vecnorm(TargetPoints - ContactPoint, 2, 2); % distances between all target contact node and the point
+    distances = vecnorm(SurfacePoints - Point, 2, 2); % distances between all target contact node and the point
     
     % sorting and choosing two closest
     [~, sortedIndices] = sort(distances); 
-    a = ContactNode_targ(sortedIndices(1));
-    b = ContactNode_targ(sortedIndices(2));
+    a = SurfaceNodes(sortedIndices(1));
+    b = SurfaceNodes(sortedIndices(2));
 
-    position_a = TargetPoints(sortedIndices(1),:);
-    position_b = TargetPoints(sortedIndices(2),:);
+    position_a = SurfacePoints(sortedIndices(1),:);
+    position_b = SurfacePoints(sortedIndices(2),:);
 
-    [xy, distance, t_a]  = distance2curve([position_a; position_b],ContactPoint,'linear');
+    [xy, distance, t_a]  = distance2curve([position_a; position_b],Point,'linear');
     tol = 1e-6; % Tolerance for error margin    
      
     info = []; % array, where we will store info of the contact point projection 
@@ -34,7 +33,7 @@ function Result = FindTargetPoint_fast(TargetBody,ContactPoint)
         % idea that on the edge, two nodes are uniquely belong to one element only 
         ElemenNumber = find(any(nloc == a, 2) & any(nloc == b, 2)); 
         if ~isempty(ElemenNumber)
-            [X,U] = GetCoorDisp(ElemenNumber,nloc,TargetBody.P0,TargetBody.u); % position of nodes of the element     
+            [X,U] = GetCoorDisp(ElemenNumber,nloc,Body.P0,Body.u); % position of nodes of the element     
             % Position of the central point of the chosen element
             central = Nm_2412(0,0)*(X+U); 
         
@@ -56,14 +55,14 @@ function Result = FindTargetPoint_fast(TargetBody,ContactPoint)
         index = min(find( minDistance == info(:,3))); % "min" is to remove possible ambiguity, such as the node can be dropped between elements   
     
         % info extraction
-        TargPosition = info(index,1:2);
+        Position = info(index,1:2);
         Normal = info(index,4:5)';
 
         % Saving
         Result.Index = info(index,6); % element on which point projected       
-        Result.Gap = (ContactPoint - TargPosition) * Normal;  % gap calculation
+        Result.Gap = (Point - Position) * Normal;  % gap calculation
         Result.Normal = Normal; % normal on the surf.
-        Result.Position = TargPosition'; % point projection
+        Result.Position = Position'; % point projection
 
    end
 

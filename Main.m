@@ -1,8 +1,9 @@
 clc, clear, close all
 format long;
-addpath("InnerForce")
+addpath("ElementFunctions");
+addpath("Forces")
 addpath("Meshing")
-addpath("Postprocess")
+addpath("ProcessAnalysis")
 addpath("Contact")
 %########## Reads element's data ###############################
 ElementData;   
@@ -16,11 +17,11 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 10;
+dx = 5;
 dy = 1;
 
 %##################### Contact ############################
-approach = 6; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 3; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
               % 6 - penalty (simplified )  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,15 +29,16 @@ approach = 6; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (no
 % approach = 1 (penalty), pn = 1e17; ContactPoints = "nodes"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pn = 1e9; 
+pn = 1e10; 
 % how contact points are chosen
-ContactPoints = "Gauss"; % options: "nodes", "Gauss", "LinSpace" 
+ContactPoints = "LinSpace"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
 % Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements is omitted)
 n = 3; % number of points per segment (Gauss & LinSpace points)
-ContactForce = ContactForceSetting(ContactPoints,n);
+ContactPointfunc  = ContactPointSetting(ContactPoints,n);
 
-GapCalculation = "Gauss"; % options: "nodes", "Gauss" 
+GapCalculation = "nodes"; % options: "nodes", "Gauss", "LinSpace" 
+n = 2; % number of points per segment (Gauss & LinSpace points)
 Gapfunc = GapCalculationSetting(GapCalculation, n);
 
 Body1.nElems.x = dx;
@@ -57,8 +59,6 @@ Body2.loc.y = 'all';
 Body1 = CreateBC(Body1);
 Body2 = CreateBC(Body2); 
 
-bc = [Body1.bc Body2.bc];
-
 %##################### Loadings ######################
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
@@ -68,7 +68,7 @@ Body1.Fext.y =-62.5*10^(7)/2;
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
 
-Body2.Fext.y = 0*62.5*10^(6); 
+Body2.Fext.y = 0; 
 Body2.Fext.x = 0;
 Body2.Fext.loc.x = Body2.Lx;
 Body2.Fext.loc.y = 'all';
@@ -117,55 +117,23 @@ for ii = 1:steps
         tic;
 
         total_steps = total_steps + 1;
-        % interacation of two bodies
-        [Fc,Kc,GapNab] = Contact(Body1,Body2,pn,approach,ContactForce,Gapfunc);
         
+        % interacation of two bodies
+        [Fc,Kc,GapNab] = Contact(Body1,Body2,pn,approach,ContactPointfunc,Gapfunc);
+        
+        % inner forces of the each body
         Body1 = Elastic(Body1);
         Body2 = Elastic(Body2);
+               
+        [ff_bc, K_bc, deltaf] = Assemblance(Body1, Body2, Fc,Kc,GapNab,approach,pn);
         
-        % Assemblance of stiffnesses
-        Ke = [            Body1.Fint.K zeros(Body1.nx,Body2.nx);
-              zeros(Body2.nx,Body1.nx)            Body2.Fint.K];
-        K = Ke + Kc;
-          
-        % Assemblance of forces
-        Fe = [Body1.Fint.vec; Body2.Fint.vec];
-        Fext = [Body1.Fext.vec; Body2.Fext.vec];
-        ff =  Fe - Fext + Fc;
-        % Calculations
-        K_bc = K(bc,bc); 
-        ff_bc = ff(bc);
-        GapNab_bc = GapNab(bc);
-
-        deltaf = ff_bc/norm(Fext(bc)); 
-        
-        if approach == 5
-       
-               %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-               % from formula (14) of Papadopoulos et al. (1998)
-               % omega = sqrt(eps);
-               % K_bc = K_bc + omega*(GapNab_bc*GapNab_bc');
-               % f_p = 0 -> ff_bc + omega * GapNab_bc * f_p == ff_bc
-               %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-               K_bc = [     K_bc GapNab_bc;
-                       GapNab_bc'       0];   
-               ff_bc = [ff_bc; tol];
-
-        elseif approach == 6 
-                   
-               K = Ke + pn/2 * (GapNab * GapNab');
-               K_bc = K(bc,bc);                
-        end    
-           
         uu_bc = -K_bc\ff_bc;  
 
-        % Separation
+        % Displacement separation
         Body1.u(Body1.bc) = Body1.u(Body1.bc) + uu_bc(1:Body1.ndof);
         Body2.u(Body2.bc) = Body2.u(Body2.bc) + uu_bc(Body1.ndof + 1:Body1.ndof + Body2.ndof);
          
-        Body1 = Analys(Body1);
-        Body2 = Analys(Body2);
-
+       
         titer=toc;
         titertot=titertot+titer;
 
@@ -176,27 +144,24 @@ for ii = 1:steps
         end 
 
     end
-    
+    Body1 = SaveResults(Body1,ii,10); % options: "all", "last", each by number 
+    Body2 = SaveResults(Body2,ii,10);
+
 end
 % %##################### Post-Processing ######################
 typeM = approachName(approach);
 fig_number = 1; 
 ShowNodeNumbers = false;
 fprintf('Static test, contact approach = %s  \n', typeM);
+PrintResults(Body1)
+PrintResults(Body2)
 gam = 1/pn;
 hold on 
-PostProcessing(Body1,fig_number,'b',ShowNodeNumbers);
-PostProcessing(Body2,fig_number,'r',ShowNodeNumbers);
+Visualization(Body1,fig_number,'b',ShowNodeNumbers);
+Visualization(Body2,fig_number,'r',ShowNodeNumbers);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ContactNode_cont = Body1.contact.nodalid;
-DofsAtNode_cont = Body1.DofsAtNode;
-% current position of the "possible contact" nodes of the Contact Body
-ContactPoints_X = Body1.q(xlocChosen(DofsAtNode_cont, ContactNode_cont,1)) + ...
-                  Body1.u(xlocChosen(DofsAtNode_cont, ContactNode_cont,1));   ... % coords on X axis;
-
-ContactPoints_Y =  Body1.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2)) + ... % coords on Y axis
-                   Body1.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
-plot(ContactPoints_X,ContactPoints_Y,'og');
+[ContactPoints, ~] = ContactPointfunc(Body1);  
+plot(ContactPoints(:,1),ContactPoints(:,2),'og');
 gapStr = sprintf('%.5f', Gap);
 fullstr = "Method = " + typeM + ", Total Gap = " + gapStr;
 title(fullstr, 'Interpreter', 'latex');

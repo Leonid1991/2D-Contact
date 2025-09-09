@@ -1,13 +1,8 @@
  
-function PostProcessing(Body,fig_number,color,ShowNodeNumbers)
+function Visualization(Body,fig_number,color,ShowNodeNumbers)
     
     FontSize = 10;
     DofsAtNode = Body.DofsAtNode;
-    Results = Body.results;
-    disp(' Mesh & DOFs & ux & uy \\)')
-    for k=1:size(Results,1) 
-        disp(sprintf('%dx%d & %4d  & %10.6f & %10.6f & %10.6f  \\\\',Results(k,:)))
-    end   
     figure(fig_number)
     DrawingLimits=[0 2.5 -1.25 0.5 -0.1 0.1]; 
     % DrawMesh2412(Body.P0,Body.nloc, zeros(Body.nx,1),DofsAtNode,DrawingLimits,'b')

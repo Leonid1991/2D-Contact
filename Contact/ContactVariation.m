@@ -1,6 +1,6 @@
-function [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactForce,Gapfunc)
+function [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactPointfunc,Gapfunc)
     
-    
+     
     % Current gap calculation 
     Gap = Gapfunc(Body1,Body2);
     
@@ -18,8 +18,8 @@ function [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactF
     GapNab = zeros(nx,1);
     I_vec=zeros(nx,1);    
     
-    if approach ~= 5 % all (Penalty & Nitsche approaches), but  Lagrange multiplier
-        Fc = ContactForce(Body1,Body2,penalty,approach); % Body1 forces from the projection of Body2
+    if (approach ~= 5) % all, but Lagrange multiplier
+        Fc = ContactForce(Body1,Body2,penalty,approach,ContactPointfunc); % Body1 forces from the projection of Body2
     else % Lagrange multiplier   
         Fc = zeros(nx,1); % we aren't interested 
     end
@@ -32,11 +32,12 @@ function [Fc,Kc,GapNab] = ContactVariation(Body1,Body2,penalty,approach,ContactF
         Body1.u = u1_backup - h*I_vec(1:Body1.nx); 
         Body2.u = u2_backup - h*I_vec(1+Body1.nx:end);
 
-        if approach < 5 % Penalty & Nitsche approaches
-            Fch = ContactForce(Body1,Body2,penalty,approach); % force due to variation
+        if (approach ~= 5) && (approach ~= 6) % Penalty & Nitsche approaches
+            
+            Fch = ContactForce(Body1,Body2,penalty,approach,ContactPointfunc); % force due to variation
             Kc(:,ii) = (Fc - Fch) / h; 
 
-        else % Lagrange multiplier & simplified penalty
+        else % Lagrange multiplier & simplified Penalty
 
             Gaph = Gapfunc(Body1,Body2);
             GapNab(ii) = (Gap - Gaph)/h;

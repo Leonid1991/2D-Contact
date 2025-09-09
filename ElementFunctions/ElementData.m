@@ -4,4 +4,3 @@ DofsAtNode=2;
 ElemDofs=ElemNodes*DofsAtNode;
 DIM=2;  
 
-addpath("ElementFunctions");

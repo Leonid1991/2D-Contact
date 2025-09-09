@@ -31,7 +31,7 @@ end
 for ii = 1:size(ContactPoints2,1) % loop over all contact points
   
     ContactPoint = ContactPoints2(ii,:);  
-    Outcome = FindTargetPoint_fast(TargetBody,ContactPoint);
+    Outcome = FindPoint(TargetBody,ContactPoint);
     % Checking the condition of the penalty approach
     if Outcome.Gap < 0 % we have meaningful outcome from the search
 
