@@ -13,7 +13,6 @@ function [ContactPoints, ContactPointsElements] = ContactPointNode(ContactBody)
     
     ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact surfaces of the contact body     
     
-
     
     ContactPointsElements = ContactBody.contact.nodalid(1); % taking the first node number
 

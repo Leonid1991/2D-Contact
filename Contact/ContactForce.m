@@ -2,7 +2,6 @@ function Fc = ContactForce(ContactBody,TargetBody,penalty,approach,ContactPointf
     
     % Target Body is a body points are projected
     % Contact Body is a body points are taken for projection
-
     Fcont = zeros(ContactBody.nx,1);
     Ftarg = zeros(TargetBody.nx,1);
 
@@ -23,7 +22,7 @@ function Fc = ContactForce(ContactBody,TargetBody,penalty,approach,ContactPointf
             Normal_targ =  Normal; 
             
             % penalty approach
-            if (approach == 1) || (approach == 6)     
+            if (approach == 1) || (approach == 6) || (approach == 7) || (approach == 8)     
             
                % calculation of the forces applied to the nodes of contact elemnet 
                Fcont_loc = penalty * Gap * Normal_cont;                                                                              
@@ -81,10 +80,12 @@ function Fc = ContactForce(ContactBody,TargetBody,penalty,approach,ContactPointf
             DOFpositions_targ = TargetGeometry.Dofs(:,i);
 
             Fcont(DOFpositions_cont) = Fcont(DOFpositions_cont) + Nm_2412(xi_cont(1),xi_cont(2))' * Fcont_loc;
-            Ftarg(DOFpositions_targ) = Ftarg(DOFpositions_targ) + Nm_2412(xi_targ(1),xi_targ(2))' * Ftarg_loc;             
+            Ftarg(DOFpositions_targ) = Ftarg(DOFpositions_targ) + Nm_2412(xi_targ(1),xi_targ(2))' * Ftarg_loc;   
+
         end 
     end  
-
+    
     % Assemblace
     Fc = [Fcont;Ftarg]; 
+
     

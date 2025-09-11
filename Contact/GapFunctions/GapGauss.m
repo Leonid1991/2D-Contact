@@ -1,13 +1,15 @@
-function Gap = GapfuncLinSpace(ContactBody,TargetBody,n)
+function Gap = GapGauss(ContactBody,TargetBody,n)
 
 Gap = 0;
+DofsAtNode_cont = ContactBody.DofsAtNode;
+ContactNode_cont = ContactBody.contact.nodalid;
 
 % current position of the "possible contact" nodes of the Contact Body
-ContactPoints_X = ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1)) + ...
-                  ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,1));   ... % coords on X axis;
+ContactPoints_X = ContactBody.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,1)) + ...
+                  ContactBody.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,1));   ... % coords on X axis;
 
-ContactPoints_Y =  ContactBody.q(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2)) + ... % coords on Y axis
-                   ContactBody.u(xlocChosen(ContactBody.DofsAtNode,ContactBody.contact.nodalid,2));
+ContactPoints_Y =  ContactBody.q(xlocChosen(DofsAtNode_cont,ContactNode_cont,2)) + ... % coords on Y axis
+                   ContactBody.u(xlocChosen(DofsAtNode_cont,ContactNode_cont,2));
 
 ContactPoints = [ContactPoints_X ContactPoints_Y]; % nodes of the contact body of the contact surfaces
 
@@ -19,18 +21,12 @@ for ii = 2:size(ContactPoints,1)
     a = ContactPoints(ii-1,:);
     b = ContactPoints(ii,:);    
     % idea that on the edge, two nodes are uniquely belong to one element only 
-    xx = geospace(a(1),b(1),n)'; % split in x- axis
-    yy = geospace(a(2),b(2),n)'; % split in y- axis
-
-    if abs(a(1) - b(1)) < sqrt(eps)
-        xx = a(1)*ones(n,1);
-    elseif abs( a(2) - b(2) ) < sqrt(eps)
-        yy = a(2)*ones(n,1); 
-    end
+    [xx,~] = gauleg2(a(1),b(1),n); % split in x- axis
+    [yy,~] = gauleg2(a(2),b(2),n); % split in y- axis
 
     % Following the Intercept theorem (Thales's theorem according Russian naming):
     % the function devide x- and y- axes in the same propotions 
-    ContactPoints2 = [ContactPoints2; xx(2:end) yy(2:end)]; % excluding the node from the previous devision
+    ContactPoints2 = [ContactPoints2; xx yy];
 end    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

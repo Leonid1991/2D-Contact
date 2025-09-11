@@ -4,11 +4,11 @@ function Gapfunc = GapCalculationSetting(GapCalculation, n)
 
     if GapCalculation == "nodes"
 
-        Gapfunc = @GapfuncNodes;
+        Gapfunc = @GapNodes;
 
     elseif GapCalculation == "Gauss"
 
-        Gapfunc = @(ContactBody,TargetBody) GapfuncGauss(ContactBody,TargetBody,n);
+        Gapfunc = @(ContactBody,TargetBody) GapGauss(ContactBody,TargetBody,n);
 
     elseif GapCalculation == "LinSpace"
         
@@ -17,7 +17,7 @@ function Gapfunc = GapCalculationSetting(GapCalculation, n)
            n = 2; 
         end 
 
-        Gapfunc = @(ContactBody,TargetBody) GapfuncLinSpace(ContactBody,TargetBody,n);
+        Gapfunc = @(ContactBody,TargetBody) GapLinSpace(ContactBody,TargetBody,n);
 
     else
 
