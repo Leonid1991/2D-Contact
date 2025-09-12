@@ -17,14 +17,17 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 8;
+dx = 4;
 dy = 1;
 
 %##################### Contact ############################
-approach = 7; % 0 - none; 1- penalty, 2- Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
+approach = 8; % 0 - none; 
+              % 1 - penalty 
+              % 2 - Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
+              % 8 - Lagrange multiplier   (advanced)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % An example of very stiff problem for the code:
 % approach = 1 (penalty), pn = 1e17; Contact & Gap points = "nodes"
@@ -99,7 +102,7 @@ Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);
 %##################### Newton iter. parameters ######################
 imax=20;
 tol=1e-4;         
-steps= 10;
+steps= 1;
 total_steps = 0;
 titertot=0;  
 

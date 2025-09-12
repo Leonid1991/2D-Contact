@@ -20,9 +20,8 @@ function [Fc,Kc,GapNab,GapDOFs,Gap] = ContactVariation(Body1,Body2,penalty,appro
     GapNab = zeros(nx,1);
     I_vec=zeros(nx,1);    
     
-    if (approach ~= 5) % all, but Lagrange multiplier
-        Fc= ContactForce(Body1,Body2,penalty,approach,ContactPointfunc); % Body1 forces from the projection of Body2
-        
+    if (approach ~= 5) && (approach ~= 8) % all, but Lagrange multiplier
+        Fc= ContactForce(Body1,Body2,penalty,approach,ContactPointfunc); % Body1 forces from the projection of Body2        
     else % Lagrange multiplier   
         Fc = zeros(nx,1); % we aren't interested 
         GapNab = GapDOFs;
@@ -36,7 +35,7 @@ function [Fc,Kc,GapNab,GapDOFs,Gap] = ContactVariation(Body1,Body2,penalty,appro
         Body1.u = u1_backup - h*I_vec(1:Body1.nx); 
         Body2.u = u2_backup - h*I_vec(1+Body1.nx:end);
 
-        if (approach == 7) % Augumented Lagrange
+        if (approach == 7) || (approach == 8) % Augumented Lagrange & Detailed Lagrange multiplier
             
             GapDOFsh = GapPointDistribution(Body1,Body2,ContactPointfunc);
             Kc(:,ii) = (GapDOFs - GapDOFsh) / h; 
