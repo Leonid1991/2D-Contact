@@ -27,7 +27,8 @@ approach = 8; % 0 - none;
               % 5 - Lagrange multiplier   
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
-              % 8 - Lagrange multiplier   (advanced)
+              % 8 - Lagrange multiplier   (advanced - from my understanding mortar approach)
+              
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % An example of very stiff problem for the code:
 % approach = 1 (penalty), pn = 1e17; Contact & Gap points = "nodes"
