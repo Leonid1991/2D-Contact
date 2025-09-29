@@ -1,12 +1,36 @@
  
-function Visualization(Body,fig_number,color,ShowNodeNumbers)
+function Visualization(Body,fig_number,vis, ShowNodeNumbers)
     
     FontSize = 10;
     DofsAtNode = Body.DofsAtNode;
     figure(fig_number)
-    DrawingLimits=[0 2.5 -1.25 0.5 -0.1 0.1]; 
-    % DrawMesh2412(Body.P0,Body.nloc, zeros(Body.nx,1),DofsAtNode,DrawingLimits,'b')
-    DrawMesh2412(Body.P0,Body.nloc,Body.u,DofsAtNode,DrawingLimits,color)  
+
+    node = reshape(Body.q + Body.u, 2, []).';
+    element = Body.nloc;
+    Displacementing = reshape(Body.u, 2, []).';
+
+    if vis == 'x'
+        patching = Displacementing(:,1);
+        % fprintf('presenting deformation along %s\n', vis);
+    elseif vis == 'y'
+        patching = Displacementing(:,2);
+         % fprintf('presenting deformation along %s\n', vis);
+        
+    elseif vis == 'total' 
+        patching = sqrt(Displacementing(:,1).^2 + Displacementing(:,2).^2);
+       %  fprintf('presenting deformation along %s\n', vis);
+    else
+        warning('***Choose the correct axis for deformaion visualization\n')
+
+        patching = Displacementing(:,2);
+        fprintf('presenting deformation along %s\n', vis);
+    end    
+    h = patch('vertices', node, 'faces', element, 'facevertexcdata', patching, 'facecolor', 'interp');
+    colormap(jet); 
+    cb = colorbar;
+    ylabel(cb, "Displacement: "+ vis, 'FontSize', [FontSize]);    % name it
+    axis equal
+    
     set(gca, 'FontSize', [FontSize], 'FontName','Times New Roman');
     set(text, 'FontSize', [FontSize], 'FontName','Times New Roman');
     xlabel('{\it{X}} [m]','FontName','Times New Roman','FontSize',[FontSize]),ylabel('{\it{Y}} [m]','FontName','Times New Roman','FontSize',[FontSize]),zlabel('Z [m]','FontName','Times New Roman','FontSize',[FontSize]);

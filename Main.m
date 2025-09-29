@@ -17,31 +17,26 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 4;
+dx = 10;
 dy = 1;
 
 %##################### Contact ############################
-approach = 8; % 0 - none; 
+approach = 4; % 0 - none; 
               % 1 - penalty 
               % 2 - Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
               % 8 - Lagrange multiplier   (advanced - from my understanding mortar approach)
-              
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% An example of very stiff problem for the code:
-% approach = 1 (penalty), pn = 1e17; Contact & Gap points = "nodes"
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Hyperparameters 
-pn = 1e8;  % penalty
+pn = 1e11;  % penalty
 
-% how contact points are chosen
 PointsofInterest = "Gauss"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
 % Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements is omitted)
-n = 3; % number of points per segment (Gauss & LinSpace points)
+n = 2; % number of points per segment (Gauss & LinSpace points)
+
 ContactPointfunc  = ContactPointSetting(PointsofInterest,n);
 Gapfunc = GapCalculationSetting(PointsofInterest, n);
 
@@ -67,7 +62,7 @@ Body2 = CreateBC(Body2);
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
 
-Body1.Fext.y =-62.5*10^(7)/2;
+Body1.Fext.y =-62.5*10^7;
 
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
@@ -101,20 +96,21 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);% 
 
 %##################### Newton iter. parameters ######################
-imax=20;
-tol=1e-4;         
-steps= 1;
-total_steps = 0;
-titertot=0;  
+imax=25;
+tol=1e-4;   
+type = "cubic";
+steps= 5;
 
 % %#################### Processing ######################
+total_steps = 0;
+titertot=0;  
 for ii = 1:steps
     
         lambda_converged = false;      % or keep it persistent if needed
         lambda = zeros(Body1.nx + Body2.nx,1); % Lagrange item initiation
 
         % Update forces, supported loading types: linear, exponential, quadratic, cubic;
-        type = "cubic";
+        
         Body1 = CreateFext(ii,steps,Body1,type);
         Body2 = CreateFext(ii,steps,Body2,type);
    
@@ -172,18 +168,18 @@ PrintResults(Body1)
 PrintResults(Body2)
 gam = 1/pn;
 hold on 
-Visualization(Body1,fig_number,'b',ShowNodeNumbers);
-Visualization(Body2,fig_number,'r',ShowNodeNumbers);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+deformation_vis = 'total'; % options: 'x', 'y', 'total' 
+Visualization(Body1,fig_number,deformation_vis,ShowNodeNumbers);
+Visualization(Body2,fig_number,deformation_vis,ShowNodeNumbers);
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% visualization of contact points and contact method
 [ContactPoints, ~] = ContactPointfunc(Body1);  
-plot(ContactPoints(:,1),ContactPoints(:,2),'og');
+h1 = plot(ContactPoints(:,1),ContactPoints(:,2),'ok','MarkerFaceColor', 'k', 'MarkerSize', 4);
+legend('contact points')
+legend(h1, 'contact points');
 gapStr = sprintf('%.5f', Gap);
 fullstr = "Method = " + typeM + ", Total Gap = " + gapStr;
 title(fullstr, 'Interpreter', 'latex');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('total steps is %d  \n', total_steps );
 fprintf('total gap is %10.22f  \n', Gap )
-
-
-
-
