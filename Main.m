@@ -18,10 +18,10 @@ Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
 dx = 10;
-dy = 1;
+dy = 2;
 
 %##################### Contact ############################
-approach = 4; % 0 - none; 
+approach = 1; % 0 - none; 
               % 1 - penalty 
               % 2 - Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier   
@@ -61,8 +61,8 @@ Body2 = CreateBC(Body2);
 %##################### Loadings ######################
 % local positions (assuming all bodies in (0,0) )
 Body1.Fext.x = 0; 
-
 Body1.Fext.y =-62.5*10^7;
+
 
 Body1.Fext.loc.x = Body1.Lx;
 Body1.Fext.loc.y = 'all';
@@ -162,15 +162,15 @@ end
 % %##################### Post-Processing ######################
 typeM = approachName(approach);
 fig_number = 1; 
-ShowNodeNumbers = false;
+ShowNodeNumbers = true;
 fprintf('Static test, contact approach = %s  \n', typeM);
 PrintResults(Body1)
 PrintResults(Body2)
 gam = 1/pn;
 hold on 
-deformation_vis = 'total'; % options: 'x', 'y', 'total' 
-Visualization(Body1,fig_number,deformation_vis,ShowNodeNumbers);
-Visualization(Body2,fig_number,deformation_vis,ShowNodeNumbers);
+vis = "sigma_yy"; % options: "ux", "uy", "u_total", "sigma_xx", "sigma_yy", "sigma_xy" 
+Visualization(Body1,fig_number,vis,ShowNodeNumbers);
+Visualization(Body2,fig_number,vis,ShowNodeNumbers);
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % visualization of contact points and contact method
 [ContactPoints, ~] = ContactPointfunc(Body1);  
