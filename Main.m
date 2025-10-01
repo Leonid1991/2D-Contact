@@ -17,34 +17,36 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx = 10;
-dy = 2;
+dx1 = 8;
+dy1 = 1;
 
+dx2 = 8;
+dy2 = 1;
 %##################### Contact ############################
-approach = 1; % 0 - none; 
+approach = 7; % 0 - none; 
               % 1 - penalty 
               % 2 - Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
-              % 5 - Lagrange multiplier   
+              % 5 - Lagrange multiplier    
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
-              % 8 - Lagrange multiplier   (advanced - from my understanding mortar approach)
+              % 8 - Lagrange multiplier   (lambda for each contact point)
 
 % Hyperparameters 
-pn = 1e11;  % penalty
+pn = 1e8;  % penalty
 
-PointsofInterest = "Gauss"; % options: "nodes", "Gauss", "LinSpace" 
+PointsofInterest = "LinSpace"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
 % Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements is omitted)
-n = 2; % number of points per segment (Gauss & LinSpace points)
+n = 3; % number of points per segment (Gauss & LinSpace points)
 
 ContactPointfunc  = ContactPointSetting(PointsofInterest,n);
 Gapfunc = GapCalculationSetting(PointsofInterest, n);
 
-Body1.nElems.x = dx;
-Body1.nElems.y = dy;
+Body1.nElems.x = dx1;
+Body1.nElems.y = dy1;
 
-Body2.nElems.x = dx;
-Body2.nElems.y = dy;
+Body2.nElems.x = dx2;
+Body2.nElems.y = dy2;
 
 Body1 = CreateFEMesh(DofsAtNode,Body1);
 Body2 = CreateFEMesh(DofsAtNode,Body2);
@@ -69,6 +71,7 @@ Body1.Fext.loc.y = 'all';
 
 Body2.Fext.y = 0; 
 Body2.Fext.x = 0;
+
 Body2.Fext.loc.x = Body2.Lx;
 Body2.Fext.loc.y = 'all';
 
@@ -108,13 +111,13 @@ for ii = 1:steps
     
         lambda_converged = false;      % or keep it persistent if needed
         lambda = zeros(Body1.nx + Body2.nx,1); % Lagrange item initiation
-
+        lambda = lambda([Body1.bc Body2.bc]);
         % Update forces, supported loading types: linear, exponential, quadratic, cubic;
         
         Body1 = CreateFext(ii,steps,Body1,type);
         Body2 = CreateFext(ii,steps,Body2,type);
    
-        while (~lambda_converged)
+        while (~lambda_converged) % special case for Augumented Lagrange
             % contact convergence
             for jj = 1:imax
                 tic;
@@ -146,16 +149,18 @@ for ii = 1:steps
             end
 
             if approach == 7
-                lambda_next = lambda + pn*GapDOFs;     
-                lambda_converged = ( norm(lambda_next - lambda) <= tol || Gap<tol^2);
+                lambda_next = lambda + pn*GapDOFs([Body1.bc Body2.bc]);
+               %  GapDOFs([Body1.bc Body2.bc])
+                lambda_converged = ( norm(lambda_next - lambda) <= tol || Gap<tol);             
                 lambda = lambda_next;
+
             else
-                lambda_converged = true;
+                lambda_converged = true;                
             end
 
         end
 
-    Body1 = SaveResults(Body1,ii,"last"); % options: "all", "last", each by number 
+    Body1 = SaveResults(Body1,ii,"last"); % options: "all", "last", each by (number) 
     Body2 = SaveResults(Body2,ii,"last");
 
 end
