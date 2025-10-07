@@ -30,10 +30,12 @@ approach = 5; % 0 - none;
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
               % 8 - Lagrange multiplier (nonlinear constrain)
-              % 9 - Test (Lagrange multiplier - many conditions)
+              % 9 - perturbed Lagrangian method 
+              % 10 - perturbed Lagrangian method (nonlinear constrain) 
+              % 11 - Test (Lagrange multiplier - many conditions)
 
 % Hyperparameters 
-pn = 1e9;  % penalty
+pn = 1e10;  % penalty
 
 PointsofInterest = "nodes"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
@@ -100,10 +102,10 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);% 
 
 %##################### Newton iter. parameters ######################
-imax=60;
-tol=1e-5;   
+imax=40;
+tol=1e-3;   
 type = "cubic"; % Update forces, supported loading types: linear, exponential, quadratic, cubic;
-steps= 3;
+steps= 20;
 
 % %#################### Processing ######################
 total_steps = 0;
@@ -111,7 +113,7 @@ titertot=0;
 for ii = 1:steps
     
         lambda_converged = false;
-        if (approach == 5) || (approach == 8)
+        if (approach == 5) || (approach == 8) || (approach == 9) || (approach == 10)
             lambda = 0;
         else
             lambda = zeros(Body1.ndof + Body2.ndof,1); % Lagrange item initiation
@@ -150,7 +152,8 @@ for ii = 1:steps
             if approach == 7 
 
                 lambda_converged = ( norm(lambda_next - lambda) <= tol );             
-                lambda = lambda_next;                
+                lambda = lambda_next;     
+
             else
                 lambda_converged = true;                
             end
@@ -170,7 +173,7 @@ PrintResults(Body1)
 PrintResults(Body2)
 gam = 1/pn;
 hold on 
-vis = "sigma_yy"; % options: "ux", "uy", "u_total", "sigma_xx", "sigma_yy", "sigma_xy" 
+vis = "sigma_yy"; % options: "frame", "ux", "uy", "u_total", "sigma_xx", "sigma_yy", "sigma_xy" 
 Visualization(Body1,fig_number,vis,ShowNodeNumbers);
 Visualization(Body2,fig_number,vis,ShowNodeNumbers);
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
