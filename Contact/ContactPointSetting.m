@@ -9,8 +9,6 @@ function ContactPointfunc = ContactPointSetting(ContactPoints,n)
 
     elseif (ContactPoints == "Gauss") || (ContactPoints == "LinSpace")
          
-        
-         
         if  ContactPoints == "Gauss" 
 
             ContactPointfunc  = @(ContactBody) ContactPointGauss(ContactBody,n);                

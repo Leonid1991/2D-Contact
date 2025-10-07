@@ -17,27 +17,28 @@ Body2.shift.x = 0;
 Body2.shift.y = -Body2.Ly;
 
 %#################### Mesh #########################################
-dx1 = 8;
+dx1 = 5;
 dy1 = 1;
 
-dx2 = 8;
+dx2 = 5;
 dy2 = 1;
 %##################### Contact ############################
-approach = 7; % 0 - none; 
+approach = 5; % 0 - none; 
               % 1 - penalty 
               % 2 - Nitsche (linear of gap), 3- Nitsche (nonlinear of gap), 4 - all items    
               % 5 - Lagrange multiplier    
               % 6 - penalty (simplified ): it's very simplified, even without gap redistribution over nodes              
               % 7 - Augumented Lagrange multiplier
-              % 8 - Lagrange multiplier   (lambda for each contact point)
+              % 8 - Lagrange multiplier (nonlinear constrain)
+              % 9 - Test (Lagrange multiplier - many conditions)
 
 % Hyperparameters 
-pn = 1e8;  % penalty
+pn = 1e9;  % penalty
 
-PointsofInterest = "LinSpace"; % options: "nodes", "Gauss", "LinSpace" 
+PointsofInterest = "nodes"; % options: "nodes", "Gauss", "LinSpace" 
 % N.B.: "LinSpace" with n == 2 is equal to "nodes"; 
 % Number of "LinSpace" + 1 = number of n in "Gauss" ('cause the first point of elements is omitted)
-n = 3; % number of points per segment (Gauss & LinSpace points)
+n = 5; % number of points per segment (Gauss & LinSpace points)
 
 ContactPointfunc  = ContactPointSetting(PointsofInterest,n);
 Gapfunc = GapCalculationSetting(PointsofInterest, n);
@@ -99,43 +100,41 @@ Body2.contact.loc.y = Body2.Ly;
 Body2.contact.nodalid = FindGlobNodalID(Body2.P0,Body2.contact.loc,Body2.shift);% 
 
 %##################### Newton iter. parameters ######################
-imax=25;
-tol=1e-4;   
-type = "cubic";
-steps= 5;
+imax=60;
+tol=1e-5;   
+type = "cubic"; % Update forces, supported loading types: linear, exponential, quadratic, cubic;
+steps= 3;
 
 % %#################### Processing ######################
 total_steps = 0;
 titertot=0;  
 for ii = 1:steps
     
-        lambda_converged = false;      % or keep it persistent if needed
-        lambda = zeros(Body1.nx + Body2.nx,1); % Lagrange item initiation
-        lambda = lambda([Body1.bc Body2.bc]);
-        % Update forces, supported loading types: linear, exponential, quadratic, cubic;
-        
+        lambda_converged = false;
+        if (approach == 5) || (approach == 8)
+            lambda = 0;
+        else
+            lambda = zeros(Body1.ndof + Body2.ndof,1); % Lagrange item initiation
+        end
+       
         Body1 = CreateFext(ii,steps,Body1,type);
         Body2 = CreateFext(ii,steps,Body2,type);
    
-        while (~lambda_converged) % special case for Augumented Lagrange
-            % contact convergence
-            for jj = 1:imax
+        while (~lambda_converged) % special case for Augumented Lagrange            
+            for jj = 1:imax % contact convergence
                 tic;
                 
                 total_steps = total_steps + 1;
                 
                 % interacation of two bodies
-                [Fc,Kc,GapNab,GapDOFs,Gap] = Contact(Body1,Body2,pn,approach,ContactPointfunc,Gapfunc);
+                [Fc,Kc,GapNab,Gap] = Contact(Body1,Body2,pn,approach,ContactPointfunc,Gapfunc);
     
                 % inner forces of the each body
                 Body1 = Elastic(Body1);
                 Body2 = Elastic(Body2);
-                       
-                
-                [ff_bc, K_bc, deltaf] = Assemblance(Body1, Body2, Fc,Kc,GapNab,approach,pn,lambda);
-                
-                uu_bc = -K_bc\ff_bc;  
-        
+                                       
+                [uu_bc, deltaf, lambda] = Assemblance(Body1, Body2, Fc,Kc,GapNab,approach,pn,lambda);
+                        
                 % Displacement separation
                 Body1.u(Body1.bc) = Body1.u(Body1.bc) + uu_bc(1:Body1.ndof);
                 Body2.u(Body2.bc) = Body2.u(Body2.bc) + uu_bc(Body1.ndof + 1:Body1.ndof + Body2.ndof);
@@ -148,12 +147,10 @@ for ii = 1:steps
                 end  
             end
 
-            if approach == 7
-                lambda_next = lambda + pn*GapDOFs([Body1.bc Body2.bc]);
-               %  GapDOFs([Body1.bc Body2.bc])
-                lambda_converged = ( norm(lambda_next - lambda) <= tol || Gap<tol);             
-                lambda = lambda_next;
+            if approach == 7 
 
+                lambda_converged = ( norm(lambda_next - lambda) <= tol );             
+                lambda = lambda_next;                
             else
                 lambda_converged = true;                
             end
@@ -181,7 +178,7 @@ Visualization(Body2,fig_number,vis,ShowNodeNumbers);
 [ContactPoints, ~] = ContactPointfunc(Body1);  
 h1 = plot(ContactPoints(:,1),ContactPoints(:,2),'ok','MarkerFaceColor', 'k', 'MarkerSize', 4);
 legend('contact points')
-legend(h1, 'contact points');
+legend(h1, 'contact points'); 
 gapStr = sprintf('%.5f', Gap);
 fullstr = "Method = " + typeM + ", Total Gap = " + gapStr;
 title(fullstr, 'Interpreter', 'latex');

@@ -1,4 +1,4 @@
-function [Fc,Kc,GapNab,GapDOFs,Gap] = Contact(Body1,Body2,penalty,approach,ContactPointfunc,Gapfunc)
+function [Fc,Kc,GapNab,Gap] = Contact(Body1,Body2,penalty,approach,ContactPointfunc,Gapfunc)
 
 % Initialize the gap 
 Gap = 0;
@@ -13,12 +13,12 @@ Kc = zeros(Body1.nx + Body2.nx, Body1.nx + Body2.nx);
 GapNab = zeros(Body1.nx + Body2.nx,1);
 
 % Initialize the gap distribution 
-GapDOFs = zeros(Body1.nx + Body2.nx,1);
+% GapDOFs = zeros(Body1.nx + Body2.nx,1);
 
 if approach ~=0 % we have contact algorithm    
     addpath("Contact\ProjectionFunctions")
 
-    [Fc,Kc,GapNab,GapDOFs,Gap] = ContactVariation(Body1,Body2,penalty,approach,ContactPointfunc,Gapfunc);    
+    [Fc,Kc,GapNab,Gap] = ContactVariation(Body1,Body2,penalty,approach,ContactPointfunc,Gapfunc);    
     
 end
 

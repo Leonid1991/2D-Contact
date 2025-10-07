@@ -22,7 +22,7 @@ function Fc = ContactForce(ContactBody,TargetBody,penalty,approach,ContactPointf
             Normal_targ =  Normal; 
             
             % penalty approach
-            if (approach == 1) || (approach == 6) || (approach == 7) || (approach == 8)
+            if (approach == 1) || (approach == 6) || (approach == 7)
             
                % calculation of the forces applied to the nodes of contact elemnet 
                Fcont_loc = penalty * Gap * Normal_cont;                                                                              
